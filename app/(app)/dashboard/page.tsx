@@ -5,7 +5,7 @@ export default async function Page() {
   const user = await getCurrentSession()
   return (
     <>
-      <H1 text={`Welcome, {user.user?.display_name}`} />
+      <H1 text={`Welcome, ${user.user?.display_name}`} />
     </>
   )
 }

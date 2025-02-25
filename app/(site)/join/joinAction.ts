@@ -4,10 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { sql } from '@/db/db'
-import { generateSessionToken, setSessionTokenCookie } from '@/auth/auth'
+import { createSession, generateSessionToken, setSessionTokenCookie } from '@/auth/auth'
 import { hash } from 'bcrypt'
 
-// Schema and types
 const JoinSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
   display_name: z.string().min(2, { message: 'Display name must be at least 2 characters long.' }),
@@ -21,7 +20,6 @@ const JoinSchema = z.object({
 type JoinFormInputs = z.infer<typeof JoinSchema>
 type ActionState = { error: string, inputs?: Partial<JoinFormInputs> } | null
 
-// Helper function to get form values
 const getFormValues = (formData: FormData) => ({
   email: String(formData.get('email') || ''),
   display_name: String(formData.get('display_name') || ''),
@@ -34,11 +32,9 @@ const getFormValues = (formData: FormData) => ({
 
 export async function joinAction(state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    // Get and validate input values
     const inputValues = getFormValues(formData)
     const result = JoinSchema.safeParse(inputValues)
 
-    // Return validation errors if any
     if (!result.success) {
       return {
         error: result.error.errors.map(e => e.message).join(', '),
@@ -48,14 +44,12 @@ export async function joinAction(state: ActionState, formData: FormData): Promis
 
     const data = result.data
     
-    // Create team
     const [team] = await sql`
       INSERT INTO team (name, city, state)
       VALUES (${data.team_name}, ${data.team_city}, ${data.team_state})
       RETURNING id
     `
     
-    // Create user with hashed password
     const passwordHash = await hash(data.password, 10)
     const [user] = await sql`
       INSERT INTO "user" (
@@ -66,16 +60,8 @@ export async function joinAction(state: ActionState, formData: FormData): Promis
       ) RETURNING id
     `
     
-    // Create session and set cookie
     const token = generateSessionToken()
-    await sql`
-      INSERT INTO session (id, user_id, expires_at)
-      VALUES (
-        ${token}, 
-        ${user.id}, 
-        ${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)}
-      )
-    `
+    await createSession(token, user.id)
     await setSessionTokenCookie(token)
   } catch (error: any) {
     return {

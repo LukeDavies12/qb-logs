@@ -14,12 +14,12 @@ export default function Page() {
   return (
     <div className="lg:w-3/4 lg:mx-auto">
       <H1 text="Join QB Logs" />
-      
+
       {error && <Alert message={error} type="error" />}
-      
+
       <form action={action} className="p-8 border border-gray-200 rounded-lg">
         <div className="lg:grid lg:grid-cols-4 lg:gap-2">
-          <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email}/>
+          <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />
           <TextInput label="Name" name="display_name" type="text" placeholder="e.g. Coach Smith" required defaultValue={state?.inputs?.display_name} />
           <TextInput label="Job Title" name="job_title" type="text" placeholder="e.g. QB Coach" required defaultValue={state?.inputs?.job_title} />
           <TextInput label="Password" name="password" type="password" placeholder="------------" required defaultValue={state?.inputs?.password} />
@@ -32,12 +32,7 @@ export default function Page() {
           <TextInput label="City" name="team_city" type="text" placeholder="e.g. Sioux City" required defaultValue={state?.inputs?.team_city} />
           <TextInput label="State" name="team_state" type="text" placeholder="e.g. IA" required error={error?.includes('State')} defaultValue={state?.inputs?.team_state} />
         </div>
-        <DefaultButton 
-          text={isPending ? "Creating account..." : "Join"} 
-          type="submit" 
-          className="mt-4 w-full" 
-          disabled={isPending} 
-        />
+        <DefaultButton text={isPending ? "Creating account..." : "Join"} type="submit" className="mt-4 w-full" disabled={isPending} />
       </form>
     </div>
   )
