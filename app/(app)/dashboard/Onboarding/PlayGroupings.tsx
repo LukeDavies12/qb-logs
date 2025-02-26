@@ -50,6 +50,11 @@ const examples = [
     type: "Pass",
     description: "Play action passes working deep to short in progression.",
   },
+  {
+    title: "Pin + Pull",
+    type: "Run (No QB Read)",
+    description: "Pin + Pull plays, (No QB Read) means no RPO. Groups like this can make study of your run game seamless.",
+  }
 ]
 
 const initialState = {
@@ -145,7 +150,7 @@ export default function OnboardingForm({ teamId }: OnboardingFormProps) {
         {playGroupings.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-neutral-900">Added Groupings</h3>
-            <div className="space-y-2 h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
+            <div className="space-y-2 h-[260px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
               {playGroupings.map((group, index) => (
                 <div
                   key={index}

@@ -46,9 +46,6 @@ export async function createPlayGroupings(prevState: ActionState, formData: Form
       await sql`ROLLBACK`;
       throw error; // Re-throw to be caught by the outer try-catch
     }
-
-    revalidatePath("/onboarding")
-    return { error: "", success: true }
   } catch (error) {
     console.error("Failed to create play groupings:", error)
     return {
@@ -56,5 +53,8 @@ export async function createPlayGroupings(prevState: ActionState, formData: Form
       success: false
     }
   }
+
+  revalidatePath('/dashboard', 'page')
+  return { error: "", success: true }
 }
 
