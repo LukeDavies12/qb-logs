@@ -24,7 +24,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   return (
-    <div className="relative inline-block">
+    <div className={`relative inline-block ${position === "right" ? "ml-1" : ""}`}>
       <div
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}

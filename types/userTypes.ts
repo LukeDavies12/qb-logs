@@ -1,4 +1,4 @@
-export type UserRole = 'Default' | 'Admin' | 'Read Only';
+export type UserRole = 'Default' | 'Admin' | 'Read Only'
 
 export interface User {
   id: number;
