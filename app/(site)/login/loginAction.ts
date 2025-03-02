@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  createSession,
-  generateSessionToken,
-  setSessionTokenCookie,
-} from "@/auth/auth";
+import { createSession, generateSessionToken, setSessionTokenCookie } from "@/auth/auth";
 import { sql } from "@/db/db";
 import { compare } from "bcrypt";
 import { revalidatePath } from "next/cache";
@@ -25,6 +21,7 @@ const getFormValues = (formData: FormData) => ({
   email: String(formData.get("email") || ""),
   password: String(formData.get("password") || ""),
 });
+
 export async function loginAction(
   state: ActionState,
   formData: FormData

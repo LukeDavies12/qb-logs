@@ -1,39 +1,53 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import type { PlayGroupingType } from "@/types/playGroupingTypes"
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
 
-interface ComboBoxProps {
+interface ComboBoxProps<T extends string> {
   label: string
   name: string
-  options: PlayGroupingType[]
+  options: T[]
   required?: boolean
   error?: boolean
-  defaultValue?: PlayGroupingType
-  value?: PlayGroupingType | ""
-  onChange?: (value: PlayGroupingType) => void
+  defaultValue?: T
+  value?: T | ""
+  onChange?: (value: T) => void
+  className?: string
 }
 
-export default function ComboBox({
-  label,
-  name,
-  options,
-  required,
-  error,
-  defaultValue,
-  value,
-  onChange,
-}: ComboBoxProps) {
+export interface ComboBoxRef {
+  reset: () => void;
+}
+
+const ComboBox = forwardRef(function ComboBox<T extends string>(
+  {
+    label,
+    name,
+    options,
+    required,
+    error,
+    defaultValue,
+    value,
+    onChange,
+    className
+  }: ComboBoxProps<T>, 
+  ref: React.Ref<ComboBoxRef>
+) {
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedValue, setSelectedValue] = useState<PlayGroupingType | "">(value || defaultValue || "")
-  const [inputValue, setInputValue] = useState(value || "")
+  const [selectedValue, setSelectedValue] = useState<T | "">(value || defaultValue || "")
+  const [inputValue, setInputValue] = useState(value || defaultValue || "")
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Update internal state when value prop changes
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setSelectedValue("")
+      setInputValue("")
+    }
+  }));
+
   useEffect(() => {
     if (value !== undefined) {
       setSelectedValue(value)
@@ -45,7 +59,7 @@ export default function ComboBox({
     error
       ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
       : "bg-neutral-100 text-neutral-800 placeholder:text-neutral-600 focus:ring-neutral-500"
-  } focus:outline-none focus:ring-2 focus:border-transparent hover:bg-neutral-50 active:bg-neutral-50`
+  } focus:outline-none focus:ring-2 focus:border-transparent hover:bg-neutral-50 active:bg-neutral-50 ${className || ""}`
 
   const labelClassName = `block text-sm font-medium ${error ? "text-red-700" : "text-neutral-700"}`
 
@@ -60,9 +74,11 @@ export default function ComboBox({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const filteredOptions = options.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
+  const filteredOptions = options.filter((option) => 
+    option.toLowerCase().includes((inputValue as string).toLowerCase())
+  )
 
-  const handleSelect = (value: PlayGroupingType) => {
+  const handleSelect = (value: T) => {
     setSelectedValue(value)
     setInputValue(value)
     setIsOpen(false)
@@ -105,7 +121,6 @@ export default function ComboBox({
   }
 
   const handleBlur = () => {
-    // Use a timeout to allow click events on options to fire before closing
     blurTimeoutRef.current = setTimeout(() => {
       setIsOpen(false)
       setHighlightedIndex(-1)
@@ -167,7 +182,7 @@ export default function ComboBox({
           <ul className="py-1 max-h-60 overflow-auto">
             {filteredOptions.map((option, index) => (
               <li
-                key={option}
+                key={typeof option === 'object' ? JSON.stringify(option) : String(option)}
                 ref={(el) => {
                   if (el) optionsRef.current[index] = el
                 }}
@@ -193,5 +208,6 @@ export default function ComboBox({
       )}
     </div>
   )
-}
+});
 
+export default ComboBox;
