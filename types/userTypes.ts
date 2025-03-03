@@ -17,3 +17,17 @@ export interface Session {
   created_at: Date;
   expires_at: Date;
 }
+
+export interface Invite {
+  id: number;
+  created_at: Date;
+  email: string;
+  display_name: string;
+  team_id: number;
+  current_season_id: number | null;
+  job_title: string;
+  role: UserRole;
+  status: 'Pending' | 'Accepted' | 'Declined';
+  token: string;
+  expires_at: Date;
+}

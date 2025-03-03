@@ -52,9 +52,10 @@ export default function PlayGroupingsOnboardingForm() {
           <h2 className="text-lg font-semibold text-neutral-900">Step 1: Create Play Groupings</h2>
           <p className="mt-1 text-base text-neutral-500">Define the categories that matter most to your offensive scheme. <span className="font-semibold">These groupings allow you to measure performance against your expectations as a play caller.</span> We've found that 10-20 groupings is perfect for most teams to get started.</p>
         </div>
-        <form onSubmit={handleAddGrouping} className="space-y-3 mb-4">
+        <form onSubmit={handleAddGrouping} className="space-y-2 mb-4">
           <TextInput label="Name" name="name" type="text" placeholder="Enter play grouping name" required error={formError} />
-          <ComboBox<PlayGroupingType> label="Type" name="type"options={playGroupingTypes} required error={formError} value={currentType} onChange={(value) => setCurrentType(value)} />
+          <ComboBox label="Type" name="type"options={playGroupingTypes} required error={formError} value={currentType} onChange={(value) => setCurrentType(value as PlayGroupingType)} />
+          <div></div>
           <SecondaryButton type="submit" text="Add Grouping" className="w-full" />
         </form>
         {state.error && <p className="text-sm text-red-600 mb-4">{state.error}</p>}
@@ -81,12 +82,11 @@ export default function PlayGroupingsOnboardingForm() {
           </div>
         )}
       </div>
-      <div>
+      <div className="px-4">
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-neutral-900">Example Groupings</h2>
           <p className="mt-1 text-base text-neutral-500">Play grouping patterns to help you get started.</p>
         </div>
-        <div className="grid gap-3">
+        <div className="grid gap-5">
           {examples.map((example, index) => (
             <ExampleCard key={index} title={example.title} type={example.type} description={example.description} />
           ))}
@@ -118,9 +118,14 @@ const examples = [
     description: "Quick-hitting pass concepts for timing-based throws.",
   },
   {
-    title: "4 WR Bottom-Up Dropback Game",
+    title: "Pin + Pull",
+    type: "Run (No QB Read)",
+    description: "Pin + Pull plays. Groups like this can make study of your run game seamless.",
+  },
+  {
+    title: "Base Dropback",
     type: "Pass",
-    description: "Progressive read passing concepts from short to deep routes with 4 WRs.",
+    description: "Progressive read passing concepts from short to deep routes with 3-5 WRs.",
   },
   {
     title: "OZ Base RPO",
@@ -133,10 +138,10 @@ const examples = [
     description: "Screen plays for a RB.",
   },
   {
-    title: "Pin + Pull",
-    type: "Run (No QB Read)",
-    description: "Pin + Pull plays. Groups like this can make study of your run game seamless.",
-  }
+    title: "PA Split-Field Read",
+    type: "Screen",
+    description: "Play Action concepts where the QB picks a half to start with and reads top-down.",
+  },
 ]
 
 const initialState = {
@@ -146,7 +151,7 @@ const initialState = {
 
 function ExampleCard({ title, type, description }: ExampleCardProps) {
   return (
-    <div className="px-2 py-3 border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors">
+    <div className="px-2 py-2 border-l-2 border-neutral-300 bg-neutral-100">
       <h3 className="text-sm font-medium text-neutral-950">{title}</h3>
       <p className="mt-1 text-xs text-neutral-700">{type}</p>
       <p className="mt-2 text-sm text-neutral-500">{description}</p>

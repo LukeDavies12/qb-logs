@@ -42,7 +42,7 @@ export default async function AppLayout({
               {user.role === "Admin" && (
                 <Tooltip text="Manage Team" position="right">
                   <Link
-                    href={"/settings"}
+                    href={"/manage-team"}
                     className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
                   >
                     <Settings2 className="w-5" />
@@ -60,7 +60,7 @@ export default async function AppLayout({
           </div>
         </div>
       </div>
-      <div className="pb-24 ml-[40px] px-3 w-full">
+      <div className="ml-[40px] px-3 w-full">
         {children}
       </div>
     </div>
