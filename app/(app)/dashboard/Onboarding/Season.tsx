@@ -160,9 +160,7 @@ export default function SeasonOnboardingForm() {
         <h2 className="text-lg font-semibold text-neutral-900">Step 2: Create a Season</h2>
         <p className="mt-1 text-base text-neutral-500">Set your QBs + RBs, then choose a game to get started with</p>
       </div>
-
       {error && <Alert message={error} type="error" />}
-
       <form action={action} className="space-y-6">
         <div className="space-y-6 mb-4">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:w-1/2">
