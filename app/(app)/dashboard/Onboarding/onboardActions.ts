@@ -139,10 +139,10 @@ export async function createSeasonAction(
       RETURNING id
     `;
     const [user] = await sql`
-      UPDATE user SET current_season_id = ${season.id} WHERE id = ${userId} RETURNING id
+      UPDATE "user" SET current_season_id = ${season.id} WHERE id = ${userId} RETURNING id
     `;
     const [game] = await sql`
-      INSERT INTO game (date, opponent, season_id)
+      INSERT INTO game (date, against, season_id)
       VALUES (${data.game_date}, ${data.game_against}, ${season.id})
       RETURNING id
     `;

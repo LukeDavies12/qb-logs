@@ -51,7 +51,12 @@ export default function DateInput({
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
+      // Fix for timezone issue - parse the date parts directly
+      const [year, month, day] = dateString.split('-').map(part => parseInt(part, 10));
+      
+      // Create a date using local timezone (months are 0-indexed in JS)
+      const date = new Date(year, month - 1, day);
+      
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',

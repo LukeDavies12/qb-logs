@@ -87,35 +87,35 @@ export default function SeasonOnboardingForm() {
     if (isStarterCheckbox) isStarterCheckbox.checked = false
   }
 
-  const handleAddSeasonRB = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent) => {
+  const handleAddSeasonRB = (e: React.FormEvent<HTMLFormElement> | React.MouseEvent, yearRef: React.RefObject<ComboBoxRef>) => {
     e.preventDefault()
-
+  
     const nameInput = document.querySelector('#rb-player-form [name="name"]') as HTMLInputElement
     const numberInput = document.querySelector('#rb-player-form [name="number"]') as HTMLInputElement
     const yearSelect = document.querySelector('#rb-player-form [name="year"]') as HTMLSelectElement
     const isActiveCheckbox = document.querySelector('#rb-player-form [name="is_active"]') as HTMLInputElement
     const isStarterCheckbox = document.querySelector('#rb-player-form [name="is_starter"]') as HTMLInputElement
-
+  
     if (!nameInput || !numberInput || !yearSelect) {
       setRbFormError(true)
       setRbErrorMessage("Please fill out all required fields")
       return
     }
-
+  
     const name = nameInput.value
     const numberValue = numberInput.value
     const year = yearSelect.value
     const is_active = isActiveCheckbox ? isActiveCheckbox.checked : true
     const is_starter = isStarterCheckbox ? isStarterCheckbox.checked : false
-
+  
     if (!name || !numberValue || !year) {
       setRbFormError(true)
       setRbErrorMessage("Please fill out all required fields")
       return
     }
-
+  
     const number = Number.parseInt(numberValue)
-
+  
     const isDuplicate = seasonRBs.some(
       (player) => player.name.toLowerCase() === name.toLowerCase() && player.number === number,
     )
@@ -124,25 +124,26 @@ export default function SeasonOnboardingForm() {
       setRbErrorMessage("This RB has already been added")
       return
     }
-
+  
     if (is_starter && seasonRBs.some(rb => rb.is_starter)) {
       setRbFormError(true)
       setRbErrorMessage("Only one starting RB is allowed")
       return
     }
-
+  
     setSeasonRBs((prev) => [...prev, { name, number, year, is_active, is_starter }])
     setRbFormError(false)
     setRbErrorMessage("")
-
+  
     nameInput.value = ""
     numberInput.value = ""
-    yearSelect.value = ""
+    
+    if (yearRef.current) {
+      yearRef.current.reset()
+    }
+    
     if (isActiveCheckbox) isActiveCheckbox.checked = true
     if (isStarterCheckbox) isStarterCheckbox.checked = false
-    
-    const event = new Event('change', { bubbles: true })
-    yearSelect.dispatchEvent(event)
   }
 
   const handleRemoveQB = (index: number) => {
@@ -155,7 +156,7 @@ export default function SeasonOnboardingForm() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-3">
         <h2 className="text-lg font-semibold text-neutral-900">Step 2: Create a Season</h2>
         <p className="mt-1 text-base text-neutral-500">Set your QBs + RBs, then choose a game to get started with</p>
       </div>
@@ -303,46 +304,74 @@ function PlayerForm({
   }, [hasStarter]);
   const formId = `${playerType.toLowerCase()}-player-form`;
 
+  // This prevents the "Add Player" button from submitting the main form
+  const onAddPlayer = (e: React.MouseEvent) => {
+    e.preventDefault(); // Stop event propagation
+    e.stopPropagation(); // Ensure it doesn't bubble up
+    handleAddPlayer(e, yearRef);
+  };
+
   return (
     <div
       id={formId}
       className="flex flex-col space-y-3 p-4 rounded-lg border border-neutral-200 bg-white"
     >
       <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-2">
-      <div className="lg:col-span-3">
-        <TextInput label="Name" name="name" type="text" placeholder={`${playerType} name`} required error={formError} />
-      </div>
-      <div className="flex gap-2 lg:col-span-6">
-        <div className="w-16 flex-shrink-0">
-          <TextInput label="Number" name="number" type="number" placeholder="#" required error={formError} />
+        <div className="lg:col-span-3">
+          <TextInput 
+            label="Name" 
+            name="name" 
+            type="text" 
+            placeholder={`${playerType} name`} 
+            required={false} // Changed from required to required={false}
+            error={formError} 
+          />
         </div>
-        <div className="flex-1 lg:col">
-          <ComboBox ref={yearRef} label="Year" name="year" options={playerYears} required error={formError} />
-        </div>
-      </div>
-      <div className="hidden lg:flex lg:flex-col lg:justify-end lg:col-span-3 lg:pb-1">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
-            <CheckboxInput
-              id={`${playerType.toLowerCase()}-is-active`}
-              name="is_active"
-              label="Active"
-              defaultChecked={true}
+        <div className="flex gap-2 lg:col-span-6">
+          <div className="w-16 flex-shrink-0">
+            <TextInput 
+              label="Number" 
+              name="number" 
+              type="number" 
+              placeholder="#" 
+              required={false} // Changed from required to required={false}
+              error={formError} 
             />
           </div>
-          <div className="flex items-center">
-            <CheckboxInput
-              id={`${playerType.toLowerCase()}-is-starter`}
-              name="is_starter"
-              label="Starter"
-              disabled={hasStarter}
-              defaultChecked={isStarterChecked}
-              onChange={(e) => setIsStarterChecked(e.target.checked)}
+          <div className="flex-1 lg:col">
+            <ComboBox 
+              ref={yearRef} 
+              label="Year" 
+              name="year" 
+              options={playerYears} 
+              required={false} // Changed from required to required={false}
+              error={formError} 
             />
           </div>
         </div>
+        <div className="hidden lg:flex lg:flex-col lg:justify-end lg:col-span-3 lg:pb-1">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center">
+              <CheckboxInput
+                id={`${playerType.toLowerCase()}-is-active`}
+                name="is_active"
+                label="Active"
+                defaultChecked={true}
+              />
+            </div>
+            <div className="flex items-center">
+              <CheckboxInput
+                id={`${playerType.toLowerCase()}-is-starter`}
+                name="is_starter"
+                label="Starter"
+                disabled={hasStarter}
+                defaultChecked={isStarterChecked}
+                onChange={(e) => setIsStarterChecked(e.target.checked)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
       <div className="flex items-center gap-4 mt-2 lg:hidden">
         <div className="flex items-center">
           <CheckboxInput
@@ -370,7 +399,7 @@ function PlayerForm({
           type="button"
           text={`Add ${playerType}`}
           className="h-9"
-          onClick={(e) => handleAddPlayer(e, yearRef)}
+          onClick={onAddPlayer}
         />
       </div>
     </div>
@@ -394,7 +423,7 @@ function PlayerList({
         <h4 className="text-xs font-medium text-neutral-700">Added {playerType}s</h4>
         <span className="text-xs text-neutral-500">{players.length} total</span>
       </div>
-      <div className="space-y-2 max-h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
+      <div className="space-y-2 max-h-[210px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
         {players.map((player, index) => (
           <div
             key={index}
