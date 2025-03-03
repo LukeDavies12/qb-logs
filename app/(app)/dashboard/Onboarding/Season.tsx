@@ -323,7 +323,7 @@ function PlayerForm({
             name="name" 
             type="text" 
             placeholder={`${playerType} name`} 
-            required={false} // Changed from required to required={false}
+            required={false}
             error={formError} 
           />
         </div>
@@ -334,7 +334,7 @@ function PlayerForm({
               name="number" 
               type="number" 
               placeholder="#" 
-              required={false} // Changed from required to required={false}
+              required={false}
               error={formError} 
             />
           </div>
