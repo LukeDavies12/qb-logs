@@ -1,10 +1,14 @@
 import { getCurrentSession } from "@/auth/auth";
 import H1 from "@/components/H1";
+import H2 from "@/components/H2";
 import { sql } from "@/db/db";
 import { PlayGrouping } from "@/types/playGroupingTypes";
 import { SeasonQB, SeasonRB } from "@/types/seasonType";
 import { Invite, User } from "@/types/userTypes";
+import { Ellipsis } from "lucide-react";
 import { redirect } from "next/navigation";
+import PlayGroupingsTable from "./PlayGroupingsTable";
+import AddPlayGrouping from "./AddPlayGrouping";
 
 interface ManageTeamData {
   currentUser: User;
@@ -186,13 +190,26 @@ export default async function ManageTeamPage() {
   return (
     <>
       <H1 text="Manage Team" />
-      <div className="space-y-6 mb-4">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:w-1/2">
-        <div>
-          <h2>Play Groupings</h2>
+      <div className="space-y-4 mb-5">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
+            <H2 text="Play Groupings" />
+            <AddPlayGrouping />
+            <PlayGroupingsTable playGroupings={data.playGroupings} />
+          </div>
+          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
+            <H2 text="Users and Invites" />
+          </div>
         </div>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
+            <H2 text="Sesaon QBs" />
+          </div>
+          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
+            <H2 text="Season RBs" />
+          </div>
         </div>
-      </div>
+      </div >
     </>
   );
 }
