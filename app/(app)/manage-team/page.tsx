@@ -5,10 +5,13 @@ import { sql } from "@/db/db";
 import { PlayGrouping } from "@/types/playGroupingTypes";
 import { SeasonQB, SeasonRB } from "@/types/seasonType";
 import { Invite, User } from "@/types/userTypes";
-import { Ellipsis } from "lucide-react";
 import { redirect } from "next/navigation";
-import PlayGroupingsTable from "./PlayGroupingsTable";
-import AddPlayGrouping from "./AddPlayGrouping";
+import PlayGroupingsTable from "./PlayGroupings/PlayGroupingsTable";
+import AddPlayGrouping from "./PlayGroupings/AddPlayGrouping";
+import SeasonQBsTable from "./SeasonQBs/SeasonQBsTable";
+import AddSeasonQB from "./SeasonQBs/AddSeasonQB";
+import SeasonRBsTable from "./SeasonRBs/SeasonRBsTable";
+import AddSeasonRB from "./SeasonRBs/AddSeasonRB";
 
 interface ManageTeamData {
   currentUser: User;
@@ -187,6 +190,9 @@ export default async function ManageTeamPage() {
     }
   });
 
+  const qbsHasStarter = data.seasonQBs.some(qb => qb.is_starter);
+  const rbsHasStarter = data.seasonRBs.some(rb => rb.is_starter);
+
   return (
     <>
       <H1 text="Manage Team" />
@@ -201,12 +207,16 @@ export default async function ManageTeamPage() {
             <H2 text="Users and Invites" />
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="h-[580px] rounded-lg border px-3 flex flex-col">
-            <H2 text="Sesaon QBs" />
+            <H2 text="Season QBs" />
+            <AddSeasonQB hasStarter={qbsHasStarter} />
+            <SeasonQBsTable seasonQBs={data.seasonQBs} />
           </div>
           <div className="h-[580px] rounded-lg border px-3 flex flex-col">
             <H2 text="Season RBs" />
+            <AddSeasonRB hasStarter={rbsHasStarter} />
+            <SeasonRBsTable seasonRBs={data.seasonRBs} />
           </div>
         </div>
       </div >

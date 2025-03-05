@@ -6,7 +6,8 @@ export default function TextInput({
   required,
   error,
   defaultValue,
-  className
+  className,
+  id
 }: {
   label: string;
   name: string;
@@ -16,6 +17,7 @@ export default function TextInput({
   error?: boolean;
   defaultValue?: string;
   className?: string;
+  id?: string;
 }) {
   const labelClassName = `block text-sm font-medium ${
     error ? 'text-red-700' : 'text-neutral-700'
@@ -41,7 +43,7 @@ export default function TextInput({
       <input
         type={type}
         name={name}
-        id={name}
+        id={id}
         autoComplete="off"
         required={required}
         className={inputClassName}

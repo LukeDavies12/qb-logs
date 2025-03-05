@@ -3,6 +3,7 @@ import H1 from "@/components/H1";
 import PlayGroupingsOnboardingForm from "./Onboarding/PlayGroupings";
 import { playGroupingCheck, seasonLengthCheck } from "./Onboarding/newUserCheck";
 import SeasonOnboardingForm from "./Onboarding/Season";
+import { sql } from "@/db/db";
 
 export default async function Page() {
   const user = await getCurrentSession()
@@ -27,9 +28,12 @@ export default async function Page() {
     )
   }
 
+  // get team name by user team id
+  const teamName = (await sql`SELECT name FROM team WHERE id = ${user.user?.team_id} LIMIT 1`)[0].name
+
   return (
     <>
-      <H1 text={`Welcome, ${user.user?.display_name}`} />
+      <H1 text={`${teamName}`} />
     </>
   )
 }

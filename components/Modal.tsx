@@ -52,7 +52,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "ma
 
   return (
     <div className="fixed inset-0 bg-neutral-900/20 flex items-center justify-center z-50">
-      <div ref={modalRef} className={`bg-white rounded-md shadow-sm w-full ${maxWidth} mx-4 overflow-hidden`}>
+      <div ref={modalRef} className={`bg-white rounded-md shadow-sm w-full ${maxWidth} mx-4 overflow-y-scroll`}>
         <div className="flex justify-between items-center px-4 py-3 border-b border-neutral-100">
           <h3 className="font-medium">{title}</h3>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-neutral-100">

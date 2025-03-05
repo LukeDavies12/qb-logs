@@ -275,8 +275,7 @@ const playerYears = [
   "Junior",
   "Redshirt Junior",
   "Senior",
-  "Redshirt Senior",
-  "Graduate",
+  "Redshirt Senior"
 ]
 
 function PlayerForm({

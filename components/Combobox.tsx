@@ -12,7 +12,8 @@ interface ComboBoxProps<T extends string> {
   defaultValue?: T
   value?: T | ""
   onChange?: (value: T) => void
-  className?: string
+  className?: string,
+  id?: string
 }
 
 export interface ComboBoxRef {
@@ -29,7 +30,8 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
     defaultValue,
     value,
     onChange,
-    className
+    className,
+    id
   }: ComboBoxProps<T>, 
   ref: React.Ref<ComboBoxRef>
 ) {
@@ -150,7 +152,7 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
       </label>
       <input
         type="text"
-        id={name}
+        id={id}
         name={name}
         className={inputClassName}
         value={inputValue}
