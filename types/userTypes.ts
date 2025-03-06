@@ -11,13 +11,6 @@ export interface User {
   role: UserRole;
 }
 
-export interface Session {
-  id: string;
-  user_id: number;
-  created_at: Date;
-  expires_at: Date;
-}
-
 export interface Invite {
   id: number;
   created_at: Date;
@@ -29,5 +22,12 @@ export interface Invite {
   role: UserRole;
   status: 'Pending' | 'Accepted' | 'Declined';
   token: string;
+  expires_at: Date;
+}
+
+export interface Session {
+  id: string;
+  user_id: number;
+  created_at: Date;
   expires_at: Date;
 }

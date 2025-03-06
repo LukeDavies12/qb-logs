@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { MoreHorizontal } from "lucide-react"
 import Dropdown from "@/components/Dropdown"
-import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import type { SeasonRB } from "@/types/seasonType"
 import { useActionState, useTransition } from "react"
 import { deleteSeasonQB } from "@/app/(app)/manage-team/manageTeamActions"
 import UpdateSeasonRBModal from "./UpdateSeasonRBModal"
@@ -53,7 +53,7 @@ export default function SeasonRBsTable({ seasonRBs }: { seasonRBs: SeasonRB[] })
     <div className="h-full flex flex-col overflow-hidden">
       {/* Scrollable content area */}
       <div className="flex-grow overflow-y-auto">
-        <div className="px-2 space-y-2 pb-2">
+        <div className="px-2 pb-2">
           {/* Table header */}
           <div className="grid grid-cols-12 gap-2 text-xs font-medium text-neutral-700 uppercase tracking-wider py-2 border-b border-neutral-100">
             <div className="col-span-5">Name</div>
@@ -74,7 +74,7 @@ export default function SeasonRBsTable({ seasonRBs }: { seasonRBs: SeasonRB[] })
               <div className="col-span-5 font-normal text-neutral-800 flex items-center gap-2">
                 {seasonRB.name}
                 {seasonRB.is_starter && (
-                  <span className="text-xs text-neutral-300 rounded-full bg-neutral-800 px-1.5 py-0.5">S</span>
+                  <span className="text-xs text-neutral-300 rounded-md bg-neutral-800 px-1.5 py-0.5">S</span>
                 )}
               </div>
               <div className="col-span-1 text-center text-neutral-700">{seasonRB.number}</div>

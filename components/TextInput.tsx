@@ -37,7 +37,7 @@ export default function TextInput({
 
   return (
     <div>
-      <label htmlFor={name} className={labelClassName}>
+      <label htmlFor={id} className={labelClassName}>
         {label}
       </label>
       <input

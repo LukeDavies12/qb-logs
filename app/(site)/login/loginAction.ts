@@ -26,8 +26,8 @@ export async function loginAction(
   state: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const inputValues = getFormValues(formData);
   try {
-    const inputValues = getFormValues(formData);
     const result = LoginSchema.safeParse(inputValues);
 
     if (!result.success) {
@@ -45,13 +45,19 @@ export async function loginAction(
     `;
 
     if (!user) {
-      return { error: "User not found." };
+      return { 
+        error: "User not found.",
+        inputs: inputValues
+      };
     }
 
     const passwordMatch = await compare(data.password, user.password_hash);
 
     if (!passwordMatch) {
-      return { error: "Invalid password." };
+      return { 
+        error: "Invalid password.",
+        inputs: inputValues
+      };
     }
 
     const token = generateSessionToken();
@@ -60,6 +66,7 @@ export async function loginAction(
   } catch (error: any) {
     return {
       error: error.message,
+      inputs: inputValues
     };
   }
 

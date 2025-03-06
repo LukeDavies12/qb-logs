@@ -9,8 +9,9 @@ interface DropdownProps {
     label: string
     onClick: () => void
     className?: string
+    disabled?: boolean
   }[]
-  align?: "left" | "right"
+  align?: "left" | "right",
 }
 
 export default function Dropdown({ trigger, items, align = "right" }: DropdownProps) {

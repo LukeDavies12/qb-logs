@@ -4,7 +4,7 @@ import { getCurrentSession } from "@/auth/auth";
 import { sql } from "@/db/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
+import { z } from "zod"
 type ActionState = {
   error: string;
   success: boolean;
@@ -591,4 +591,182 @@ export async function addSeasonRB(
 
   revalidatePath("/manage-team", "page");
   return { error: "", success: true };
+}
+
+export async function deleteTeamUser(prevState: { error: string, success: boolean }, formData: FormData) {
+  try {
+    const { user } = await getCurrentSession()
+    if (!user) {
+      return { error: "Not authenticated", success: false }
+    }
+
+    if (user.role !== "Admin") {
+      return { error: "Only admins can remove team members", success: false }
+    }
+
+    const userId = formData.get("id")
+    if (!userId) {
+      return { error: "User ID is required", success: false }
+    }
+
+    // Don't allow removing yourself
+    if (Number(userId) === user.id) {
+      return { error: "You cannot remove yourself from the team", success: false }
+    }
+
+    // Verify the user is part of the current team
+    const userToDelete = await sql`
+      SELECT * FROM "user" WHERE id = ${userId} AND team_id = ${user.team_id}
+    `
+
+    if (userToDelete.length === 0) {
+      return { error: "User not found in your team", success: false }
+    }
+
+    // Remove the user from the team (set team_id to null)
+    await sql`
+      UPDATE "user" 
+      SET team_id = NULL, current_season_id = NULL 
+      WHERE id = ${userId}
+    `
+
+    revalidatePath("/manage-team")
+    return { error: "", success: true }
+  } catch (error) {
+    console.error("Error deleting team user:", error)
+    return { error: "Failed to remove user from team", success: false }
+  }
+}
+
+// Delete a team invite
+export async function deleteTeamInvite(prevState: { error: string, success: boolean }, formData: FormData) {
+  try {
+    const { user } = await getCurrentSession()
+    if (!user) {
+      return { error: "Not authenticated", success: false }
+    }
+
+    if (user.role !== "Admin") {
+      return { error: "Only admins can cancel invitations", success: false }
+    }
+
+    const inviteId = formData.get("id")
+    if (!inviteId) {
+      return { error: "Invite ID is required", success: false }
+    }
+
+    // Verify the invite is for the current team
+    const inviteToDelete = await sql`
+      SELECT * FROM invite WHERE id = ${inviteId} AND team_id = ${user.team_id}
+    `
+
+    if (inviteToDelete.length === 0) {
+      return { error: "Invitation not found", success: false }
+    }
+
+    // Delete the invite
+    await sql`
+      DELETE FROM invite WHERE id = ${inviteId}
+    `
+
+    revalidatePath("/manage-team")
+    return { error: "", success: true }
+  } catch (error) {
+    console.error("Error deleting team invite:", error)
+    return { error: "Failed to cancel invitation", success: false }
+  }
+}
+
+// Create a team invite
+export async function createTeamInvite(prevState: { error: string, success: boolean }, formData: FormData) {
+  try {
+    const { user } = await getCurrentSession()
+    if (!user) {
+      return { error: "Not authenticated", success: false }
+    }
+
+    if (user.role !== "Admin") {
+      return { error: "Only admins can send invitations", success: false }
+    }
+
+    // Validate input
+    const schema = z.object({
+      email: z.string().email("Invalid email address"),
+      display_name: z.string().optional(),
+      job_title: z.string().min(1, "Job title is required"),
+      role: z.enum(["ADMIN", "EDITOR", "VIEWER"])
+    })
+
+    const data = {
+      email: formData.get("email") as string,
+      display_name: formData.get("display_name") as string,
+      job_title: formData.get("job_title") as string,
+      role: formData.get("role") as "ADMIN" | "EDITOR" | "VIEWER"
+    }
+
+    const result = schema.safeParse(data)
+    if (!result.success) {
+      const errorMessage = result.error.issues[0]?.message || "Invalid input"
+      return { error: errorMessage, success: false }
+    }
+
+    // Check if user with this email already exists in the team
+    const existingUser = await sql`
+      SELECT * FROM "user" WHERE email = ${data.email} AND team_id = ${user.team_id}
+    `
+    if (existingUser.length > 0) {
+      return { error: "A user with this email is already in your team", success: false }
+    }
+
+    // Check if there's already a pending invite for this email
+    const existingInvite = await sql`
+      SELECT * FROM invite 
+      WHERE email = ${data.email} AND team_id = ${user.team_id} AND status = 'Pending'
+    `
+    if (existingInvite.length > 0) {
+      return { error: "There's already a pending invitation for this email", success: false }
+    }
+
+    // Generate a random token
+    const token = crypto.randomUUID()
+    
+    // Set expiration date (48 hours from now)
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 48)
+
+    // Create the invite
+    await sql`
+      INSERT INTO invite (
+        created_at, 
+        email, 
+        display_name, 
+        team_id, 
+        current_season_id, 
+        job_title, 
+        role, 
+        status, 
+        token, 
+        expires_at
+      ) VALUES (
+        NOW(), 
+        ${data.email}, 
+        ${data.display_name || null}, 
+        ${user.team_id}, 
+        ${user.current_season_id}, 
+        ${data.job_title}, 
+        ${data.role}, 
+        'Pending', 
+        ${token}, 
+        ${expiresAt.toISOString()}
+      )
+    `
+
+    // TODO: Send invitation email here
+
+    revalidatePath("/manage-team")
+    return { error: "", success: true }
+  } catch (error) {
+    console.error("Error creating team invite:", error)
+    return { error: "Failed to create invitation", success: false }
+  }
 }

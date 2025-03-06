@@ -167,6 +167,7 @@ export default function SeasonOnboardingForm() {
             <TextInput
               label="Year"
               name="season_year"
+              id="season_year"
               type="number"
               placeholder="Enter year"
               defaultValue={inputs.season_year?.toString() || "2024"}
@@ -176,6 +177,7 @@ export default function SeasonOnboardingForm() {
             <ComboBox
               label="Fall Season or Spring Ball"
               name="season_type"
+              id="season_type"
               options={seasonTypes}
               required
               error={error?.includes("type")}
@@ -237,6 +239,7 @@ export default function SeasonOnboardingForm() {
             <TextInput
               label="Against"
               name="game_against"
+              id="game_against"
               type="text"
               placeholder="Enter opponent"
               required
@@ -318,7 +321,8 @@ function PlayerForm({
           <TextInput 
             label="Name" 
             name="name" 
-            type="text" 
+            type="text"
+            id="name"
             placeholder={`${playerType} name`} 
             required={false}
             error={formError} 
@@ -330,6 +334,7 @@ function PlayerForm({
               label="Number" 
               name="number" 
               type="number" 
+              id="number"
               placeholder="#" 
               required={false}
               error={formError} 
@@ -340,6 +345,7 @@ function PlayerForm({
               ref={yearRef} 
               label="Year" 
               name="year" 
+              id="year"
               options={playerYears} 
               required={false} // Changed from required to required={false}
               error={formError} 

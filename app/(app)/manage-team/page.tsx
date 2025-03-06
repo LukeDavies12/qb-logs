@@ -12,6 +12,8 @@ import SeasonQBsTable from "./SeasonQBs/SeasonQBsTable";
 import AddSeasonQB from "./SeasonQBs/AddSeasonQB";
 import SeasonRBsTable from "./SeasonRBs/SeasonRBsTable";
 import AddSeasonRB from "./SeasonRBs/AddSeasonRB";
+import AddTeamInvite from "./Users/AddTeamInvite";
+import UsersAndInvitesTable from "./Users/UsersTable";
 
 interface ManageTeamData {
   currentUser: User;
@@ -205,6 +207,8 @@ export default async function ManageTeamPage() {
           </div>
           <div className="h-[580px] rounded-lg border px-3 flex flex-col">
             <H2 text="Users and Invites" />
+            <AddTeamInvite />
+            <UsersAndInvitesTable users={data.teamUsers} invites={data.teamInvites} currentUserId={user.id as number} />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

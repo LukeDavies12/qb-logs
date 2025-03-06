@@ -78,7 +78,7 @@ export default function AddSeasonQB({
   }
 
   return (
-    <form key={formKey} ref={formRef} onSubmit={handleAddQB} className="lg:flex lg:gap-2 space-y-2 lg:space-y-0 mb-4">
+    <form key={formKey} ref={formRef} onSubmit={handleAddQB} className="lg:flex lg:gap-1 space-y-2 lg:space-y-0 mb-4">
       <div className="lg:w-3/12">
         <TextInput label="Name" name="name" type="text" placeholder="QB name" required error={formError} />
       </div>
@@ -92,7 +92,7 @@ export default function AddSeasonQB({
       </div>
 
       <div className="lg:w-3/12 flex items-end">
-        <div className="flex items-end pb-1 gap-4 h-9">
+        <div className="flex items-end pb-1 gap-1 h-9">
           <CheckboxInput id="qb-is-active" name="is_active" label="Active" defaultChecked={true} />
 
           <CheckboxInput
@@ -106,7 +106,7 @@ export default function AddSeasonQB({
         </div>
       </div>
 
-      <div className="lg:w-2/12 flex flex-col justify-end">
+      <div className="lg:w-2/12 flex flex-col justify-end lg:ml-3">
         <DefaultButton
           type="submit"
           text={isPending || isPendingTransition ? "Adding..." : "Add QB"}

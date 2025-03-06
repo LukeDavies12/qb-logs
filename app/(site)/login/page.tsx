@@ -10,13 +10,13 @@ import { loginAction } from "./loginAction"
 export default function Page() {
   const [state, action, isPending] = useActionState(loginAction, null)
   const error = state?.error || null
-
+  
   return (
     <div className="lg:w-3/4 lg:mx-auto">
       <H1 text="Login" />
-
+      
       {error && <Alert message={error} type="error" />}
-
+      
       <form action={action} className="p-8 border border-gray-200 rounded-lg">
         <div className="lg:grid lg:grid-cols-2 lg:gap-2">
           <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />

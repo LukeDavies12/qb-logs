@@ -53,8 +53,8 @@ export default function PlayGroupingsOnboardingForm() {
           <p className="mt-1 text-base text-neutral-500">Define the categories that matter most to your offensive scheme. <span className="font-semibold">These groupings allow you to measure performance against your expectations as a play caller.</span> We've found that 10-20 groupings is perfect for most teams to get started.</p>
         </div>
         <form onSubmit={handleAddGrouping} className="space-y-2 mb-4">
-          <TextInput label="Name" name="name" type="text" placeholder="Enter play grouping name" required error={formError} />
-          <ComboBox label="Type" name="type"options={playGroupingTypes} required error={formError} value={currentType} onChange={(value) => setCurrentType(value as PlayGroupingType)} />
+          <TextInput label="Name" name="name" id="name" type="text" placeholder="Enter play grouping name" required error={formError} />
+          <ComboBox label="Type" name="type" id="type" options={playGroupingTypes} required error={formError} value={currentType} onChange={(value) => setCurrentType(value as PlayGroupingType)} />
           <div></div>
           <SecondaryButton type="submit" text="Add Grouping" className="w-full" />
         </form>
