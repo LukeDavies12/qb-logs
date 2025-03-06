@@ -9,8 +9,7 @@ export default async function Page({
 }: {
   params: { gameId: string };
 }) {
-  const paramsId = (await params).gameId;
-  const gameId = Number(paramsId);
+  const gameId = Number(params.gameId);
   if (!gameId) redirect("/dashboard");
 
   // First check if the game's season_id is the user's current season_id
