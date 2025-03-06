@@ -762,7 +762,7 @@ export async function createTeamInvite(prevState: { error: string, success: bool
     `
 
     // TODO: Send invitation email here
-
+    
     revalidatePath("/manage-team")
     return { error: "", success: true }
   } catch (error) {

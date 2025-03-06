@@ -7,9 +7,9 @@ import { redirect } from "next/navigation";
 export default async function Page({
   params
 }: {
-  params: { gameId: string };
+  params: Promise<{ gameId: string }>;
 }) {
-  const gameId = Number(params.gameId);
+  const gameId = Number((await params).gameId);
   if (!gameId) redirect("/dashboard");
 
   // First check if the game's season_id is the user's current season_id
