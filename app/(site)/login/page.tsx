@@ -18,7 +18,7 @@ export default function Page() {
       {error && <Alert message={error} type="error" />}
       
       <form action={action} className="p-8 border border-gray-200 rounded-lg">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-2">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-2 space-y-2 lg:space-y-0">
           <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />
           <TextInput label="Password" name="password" type="password" placeholder="------------" required defaultValue={state?.inputs?.password} />
         </div>

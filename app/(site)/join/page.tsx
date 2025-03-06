@@ -18,7 +18,7 @@ export default function Page() {
       {error && <Alert message={error} type="error" />}
 
       <form action={action} className="p-8 border border-gray-200 rounded-lg">
-        <div className="lg:grid lg:grid-cols-4 lg:gap-2">
+        <div className="lg:grid lg:grid-cols-4 lg:gap-2 space-y-2 lg:space-y-0">
           <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />
           <TextInput label="Name" name="display_name" type="text" placeholder="e.g. Coach Smith" required defaultValue={state?.inputs?.display_name} />
           <TextInput label="Job Title" name="job_title" type="text" placeholder="e.g. QB Coach" required defaultValue={state?.inputs?.job_title} />
@@ -27,7 +27,7 @@ export default function Page() {
         <br />
         <div className="border-t border-neutral-200"></div>
         <br />
-        <div className="lg:grid lg:grid-cols-3 lg:gap-2">
+        <div className="lg:grid lg:grid-cols-3 lg:gap-2 space-y-2 lg:space-y-0">
           <TextInput label="Team" name="team_name" type="text" placeholder="e.g. Briar Cliff Chargers" required error={error?.includes('team')} defaultValue={state?.inputs?.team_name} />
           <TextInput label="City" name="team_city" type="text" placeholder="e.g. Sioux City" required defaultValue={state?.inputs?.team_city} />
           <TextInput label="State" name="team_state" type="text" placeholder="e.g. IA" required error={error?.includes('State')} defaultValue={state?.inputs?.team_state} />

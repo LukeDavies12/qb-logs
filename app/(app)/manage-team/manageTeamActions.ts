@@ -5,6 +5,10 @@ import { sql } from "@/db/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod"
+import { Resend } from "resend";
+import { sha256 } from "@oslojs/crypto/sha2";
+import { encodeHexLowerCase } from "@oslojs/encoding";
+
 type ActionState = {
   error: string;
   success: boolean;
@@ -638,7 +642,6 @@ export async function deleteTeamUser(prevState: { error: string, success: boolea
   }
 }
 
-// Delete a team invite
 export async function deleteTeamInvite(prevState: { error: string, success: boolean }, formData: FormData) {
   try {
     const { user } = await getCurrentSession()
@@ -677,7 +680,8 @@ export async function deleteTeamInvite(prevState: { error: string, success: bool
   }
 }
 
-// Create a team invite
+const resend = new Resend(process.env.RESEND_KEY);
+
 export async function createTeamInvite(prevState: { error: string, success: boolean }, formData: FormData) {
   try {
     const { user } = await getCurrentSession()
@@ -727,8 +731,10 @@ export async function createTeamInvite(prevState: { error: string, success: bool
       return { error: "There's already a pending invitation for this email", success: false }
     }
 
-    // Generate a random token
-    const token = crypto.randomUUID()
+    // Generate a token using SHA-256
+    const token = encodeHexLowerCase(
+      sha256(new TextEncoder().encode(data.email + Date.now()))
+    );
     
     // Set expiration date (48 hours from now)
     const expiresAt = new Date()
@@ -761,7 +767,43 @@ export async function createTeamInvite(prevState: { error: string, success: bool
       )
     `
 
-    // TODO: Send invitation email here
+    // Send invitation email
+    const displayName = data.display_name || data.email.split('@')[0];
+    const jobTitle = data.job_title;
+    const inviteAppRole = data.role;
+    
+    // Generate the invite URL
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/accept?invite-code=${token}`;
+    
+    // Send the invitation email
+    try {
+      const { data: emailData, error } = await resend.emails.send({
+        from: "luke@qblogs.app",
+        to: [data.email],
+        subject: `${displayName}, you've been invited to QB Logs`,
+        html: `
+          <h1>You've been invited to join QB Logs</h1>
+          <p>Hello ${displayName},</p>
+          <p>You've been invited to join as a ${jobTitle} with the role of ${inviteAppRole}.</p>
+          <p>Click the button below to accept your invitation, set your password, and sign on:</p>
+          <a href="${inviteUrl}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            Accept Invitation
+          </a>
+          <p>Or copy and paste this link into your browser:</p>
+          <p>${inviteUrl}</p>
+        `,
+      });
+      
+      if (error) {
+        console.error("Error sending email:", error);
+        return { success: false, error: "Failed to send invitation email" };
+      }
+      
+      console.log("Email sent successfully:", emailData);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      return { success: false, error: "Failed to send invitation email" };
+    }
     
     revalidatePath("/manage-team")
     return { error: "", success: true }
