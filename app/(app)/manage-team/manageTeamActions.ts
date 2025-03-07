@@ -8,6 +8,7 @@ import { z } from "zod"
 import { Resend } from "resend";
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
+import { UserRole } from "@/types/userTypes";
 
 type ActionState = {
   error: string;
@@ -698,14 +699,14 @@ export async function createTeamInvite(prevState: { error: string, success: bool
       email: z.string().email("Invalid email address"),
       display_name: z.string().optional(),
       job_title: z.string().min(1, "Job title is required"),
-      role: z.enum(["ADMIN", "EDITOR", "VIEWER"])
+      role: z.enum(["Admin", "Default", "Read Only"] as const)
     })
 
     const data = {
       email: formData.get("email") as string,
       display_name: formData.get("display_name") as string,
       job_title: formData.get("job_title") as string,
-      role: formData.get("role") as "ADMIN" | "EDITOR" | "VIEWER"
+      role: formData.get("role") as UserRole
     }
 
     const result = schema.safeParse(data)

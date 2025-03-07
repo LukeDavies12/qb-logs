@@ -64,8 +64,34 @@ export async function acceptInviteAction(
 
     // Check if the invitation has expired
     if (new Date(inviteData.expires_at) < new Date()) {
+      // Update expired invitation status
+      await sql`
+        UPDATE invite
+        SET status = 'Expired'
+        WHERE id = ${inviteData.id}
+      `;
+      
       return { 
         error: "This invitation has expired",
+        inputs: inputValues
+      };
+    }
+
+    // Check if user with this email already exists
+    const existingUser = await sql`
+      SELECT id FROM "user" WHERE email = ${inviteData.email}
+      LIMIT 1
+    `;
+
+    if (existingUser && existingUser.length > 0) {
+      // Delete the invite since the user already exists
+      await sql`
+        DELETE FROM invite
+        WHERE id = ${inviteData.id}
+      `;
+      
+      return {
+        error: "A user with this email already exists",
         inputs: inputValues
       };
     }
@@ -102,12 +128,24 @@ export async function acceptInviteAction(
       };
     }
 
-    // Update the invitation status to 'Accepted'
+    // Option 1: Delete the invitation after successful acceptance
     await sql`
-      UPDATE invite
-      SET status = 'Accepted'
+      DELETE FROM invite
       WHERE id = ${inviteData.id}
     `;
+
+    // Option 2 (alternative): Update status and add completion timestamp
+    // Uncomment this and comment out the DELETE statement above if you prefer to keep records
+    /*
+    await sql`
+      UPDATE invite
+      SET 
+        status = 'Accepted',
+        accepted_at = NOW(),
+        user_id = ${newUser[0].id}
+      WHERE id = ${inviteData.id}
+    `;
+    */
 
     // Log in the user
     const userId = newUser[0].id;
@@ -116,12 +154,31 @@ export async function acceptInviteAction(
     await setSessionTokenCookie(sessionToken);
   
   } catch (error: any) {
+    console.error("Error accepting invitation:", error);
     return {
-      error: error.message,
+      error: error.message || "An unexpected error occurred",
       inputs: inputValues
     };
   }
   
+  revalidatePath("/manage-team");
   revalidatePath("/");
   return redirect("/dashboard");
+}
+
+// Cleanup function that can be scheduled to run periodically
+export async function cleanupExpiredInvites() {
+  try {
+    const result = await sql`
+      DELETE FROM invite
+      WHERE status = 'Pending' AND expires_at < NOW()
+      RETURNING id
+    `;
+    
+    console.log(`Cleaned up ${result.length} expired invitations`);
+    return { success: true, count: result.length };
+  } catch (error) {
+    console.error("Error cleaning up expired invitations:", error);
+    return { success: false, error };
+  }
 }

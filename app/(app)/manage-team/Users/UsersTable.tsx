@@ -130,7 +130,7 @@ export default function UsersAndInvitesTable({
                     </span>
                   )}
                   {!isUser && (
-                    <span className={`text-xs rounded-md px-1.5 py-0.5 ml-2 ${
+                    <span className={`text-xs rounded-md px-1.5 py-0.5 ${
                       item.data.status === 'Pending' 
                         ? isExpired(item.data.expires_at) 
                           ? "bg-neutral-200 text-neutral-600" 

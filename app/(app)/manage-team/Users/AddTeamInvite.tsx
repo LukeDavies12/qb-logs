@@ -1,19 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus } from "lucide-react"
 import { useTransition } from "react"
 import { useActionState } from "react"
 import { createTeamInvite } from "@/app/(app)/manage-team/manageTeamActions"
+import { UserRole } from "@/types/userTypes"
 
 export default function AddTeamInvite() {
   const [isOpen, setIsOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [displayName, setDisplayName] = useState("")
   const [jobTitle, setJobTitle] = useState("")
-  const [role, setRole] = useState("VIEWER") // Default role
+  const [role, setRole] = useState<UserRole>("Default") // Default role
   const [createState, createAction, isCreatePending] = useActionState(createTeamInvite, { error: "", success: false })
   const [isPendingTransition, startTransition] = useTransition()
+
+  // Effect to handle successful invites
+  useEffect(() => {
+    if (createState.success) {
+      setIsOpen(false)
+      resetForm()
+    }
+  }, [createState.success])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,10 +35,6 @@ export default function AddTeamInvite() {
     
     startTransition(() => {
       createAction(formData)
-      if (createState.success) {
-        setIsOpen(false)
-        resetForm()
-      }
     })
   }
 
@@ -37,7 +42,7 @@ export default function AddTeamInvite() {
     setEmail("")
     setDisplayName("")
     setJobTitle("")
-    setRole("VIEWER")
+    setRole("Read Only")
   }
 
   return (
@@ -102,13 +107,13 @@ export default function AddTeamInvite() {
                 <select
                   id="role"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
                   className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-neutral-400"
                   required
                 >
-                  <option value="ADMIN">Admin</option>
-                  <option value="EDITOR">Editor</option>
-                  <option value="VIEWER">Viewer</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Default">Default</option>
+                  <option value="Read Only">Read Only</option>
                 </select>
               </div>
 
