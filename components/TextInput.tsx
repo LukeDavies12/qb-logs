@@ -1,56 +1,72 @@
-export default function TextInput({
-  label,
-  name,
-  type,
-  placeholder,
-  required,
-  error,
-  defaultValue,
-  className,
-  id
-}: {
-  label: string;
-  name: string;
-  type: string;
-  placeholder: string;
-  required?: boolean;
-  error?: boolean;
-  defaultValue?: string;
-  className?: string;
-  id?: string;
-}) {
-  const labelClassName = `block text-sm font-medium ${
-    error ? 'text-red-700' : 'text-neutral-700'
-  }`;
+import React, { forwardRef } from "react"
 
-  const inputClassName = `
-    mt-1 p-2 block w-full sm:text-sm rounded-md
-    ${
-      error
-        ? 'bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500'
-        : 'bg-neutral-100 text-neutral-800 placeholder:text-neutral-600 focus:ring-neutral-500'
-    }
-    focus:outline-none focus:ring-2 focus:border-transparent
-    hover:bg-neutral-50 active:bg-neutral-50
-    ${className || ''}
-  `;
-
-  return (
-    <div>
-      <label htmlFor={id} className={labelClassName}>
-        {label}
-      </label>
-      <input
-        type={type}
-        name={name}
-        id={id}
-        autoComplete="off"
-        required={required}
-        className={inputClassName}
-        placeholder={placeholder}
-        aria-invalid={error}
-        defaultValue={defaultValue}
-      />
-    </div>
-  );
+interface TextInputProps {
+  label: string
+  name: string
+  placeholder?: string
+  type?: string
+  required?: boolean
+  error?: boolean
+  defaultValue?: string
+  className?: string
+  id?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
+
+// Using forwardRef properly handles the ref type
+const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
+  (
+    {
+      label,
+      name,
+      placeholder,
+      type = "text",
+      required,
+      error,
+      defaultValue,
+      className,
+      id,
+      onChange
+    }: TextInputProps,
+    ref
+  ) => {
+    const labelClassName = `block text-xs font-medium ${error ? "text-red-700" : "text-neutral-700"}`
+
+    const inputClassName = `
+      mt-1 p-2 block w-full sm:text-sm rounded-md
+      ${
+        error
+          ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
+          : "bg-neutral-100 text-neutral-900 placeholder:text-neutral-400 focus:ring-neutral-500"
+      }
+      focus:outline-none focus:ring-2 focus:border-transparent
+      hover:bg-neutral-50 active:bg-neutral-50
+      ${className || ""}
+    `
+
+    return (
+      <div>
+        <label htmlFor={id} className={labelClassName}>
+          {label}
+        </label>
+        <input
+          type={type}
+          name={name}
+          id={id}
+          required={required}
+          className={inputClassName}
+          placeholder={placeholder}
+          aria-invalid={error}
+          defaultValue={defaultValue}
+          ref={ref}
+          onChange={onChange}
+        />
+      </div>
+    )
+  }
+)
+
+// Add a display name for debugging purposes
+TextInput.displayName = "TextInput"
+
+export default TextInput

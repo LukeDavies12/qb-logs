@@ -12,28 +12,17 @@ interface ComboBoxProps<T extends string> {
   defaultValue?: T
   value?: T | ""
   onChange?: (value: T) => void
-  className?: string,
+  className?: string
   id?: string
 }
 
 export interface ComboBoxRef {
-  reset: () => void;
+  reset: () => void
 }
 
 const ComboBox = forwardRef(function ComboBox<T extends string>(
-  {
-    label,
-    name,
-    options,
-    required,
-    error,
-    defaultValue,
-    value,
-    onChange,
-    className,
-    id
-  }: ComboBoxProps<T>, 
-  ref: React.Ref<ComboBoxRef>
+  { label, name, options, required, error, defaultValue, value, onChange, className, id }: ComboBoxProps<T>,
+  ref: React.Ref<ComboBoxRef>,
 ) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedValue, setSelectedValue] = useState<T | "">(value || defaultValue || "")
@@ -43,12 +32,20 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Fix for the setState during render issue
+  const resetRef = useRef(() => {
+    setSelectedValue("")
+    setInputValue("")
+  })
+
   useImperativeHandle(ref, () => ({
     reset: () => {
-      setSelectedValue("")
-      setInputValue("")
-    }
-  }));
+      // Use setTimeout to defer the state update until after the current render cycle
+      setTimeout(() => {
+        resetRef.current()
+      }, 0)
+    },
+  }))
 
   useEffect(() => {
     if (value !== undefined) {
@@ -60,10 +57,10 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
   const inputClassName = `mt-1 p-2 block w-full sm:text-sm rounded-md ${
     error
       ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
-      : "bg-neutral-100 text-neutral-800 placeholder:text-neutral-600 focus:ring-neutral-500"
+      : "bg-neutral-100 text-neutral-800 placeholder:text-neutral-400 focus:ring-neutral-500"
   } focus:outline-none focus:ring-2 focus:border-transparent hover:bg-neutral-50 active:bg-neutral-50 ${className || ""}`
 
-  const labelClassName = `block text-sm font-medium ${error ? "text-red-700" : "text-neutral-700"}`
+  const labelClassName = `block text-xs font-medium ${error ? "text-red-700" : "text-neutral-700"}`
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -76,8 +73,8 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const filteredOptions = options.filter((option) => 
-    option.toLowerCase().includes((inputValue as string).toLowerCase())
+  const filteredOptions = options.filter((option) =>
+    option.toLowerCase().includes((inputValue as string).toLowerCase()),
   )
 
   const handleSelect = (value: T) => {
@@ -184,7 +181,7 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
           <ul className="py-1 max-h-60 overflow-auto">
             {filteredOptions.map((option, index) => (
               <li
-                key={typeof option === 'object' ? JSON.stringify(option) : String(option)}
+                key={typeof option === "object" ? JSON.stringify(option) : String(option)}
                 ref={(el) => {
                   if (el) optionsRef.current[index] = el
                 }}
@@ -210,6 +207,6 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
       )}
     </div>
   )
-});
+})
 
-export default ComboBox;
+export default ComboBox

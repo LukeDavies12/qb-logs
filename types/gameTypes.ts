@@ -18,6 +18,7 @@ export interface GameDrive {
 export interface GamePlay {
   id: number;
   drive_id: number;
+  drive_number_in_game?: number | null;
   film_number: number;
   qb_in_id: number;
   rb_carry_id: number | null;
@@ -26,6 +27,11 @@ export interface GamePlay {
   distance: number;
   play_grouping_id: number;
   play_grouping_type: PlayPlayGroupingType | null;
+  
+  // Add these two new properties
+  qb_in: { id: number; name: string; number: number } | null;
+  rb_carry: { id: number; name: string; number: number } | null;
+  
   play_call: string;
   play_call_tags: string | null;
   yards_gained: number;
@@ -44,10 +50,13 @@ export interface GamePlay {
   rb_vision: PlayExecutionLevel | null;
   rb_run_execution: PlayExecutionLevel | null;
   notes: string | null;
+  tags: PlayTag[] | null;
 }
 
 export type PlayResult = 'Rush' | 'Rush TD' | 'Complete' | 'Complete TD' | 'Incomplete' | 'Scramble'
                           | 'Scramble TD' | 'Sack' | 'QB Rush' | 'QB Rush TD' | 'Penalty' | 'Interception' | 'Fumble';
+export const playResultsConst = ['Rush', 'Rush TD', 'Complete', 'Complete TD', 'Incomplete', 'Scramble',
+                                'Scramble TD', 'Sack', 'QB Rush', 'QB Rush TD', 'Penalty', 'Interception', 'Fumble'];
 
 export interface PlayPlayGroupingType {
   id: number;
@@ -56,6 +65,14 @@ export interface PlayPlayGroupingType {
   team_id: number;
 }
 
+export interface PlayTag {
+  play_id: number;
+  tag_id: number;
+  team_id: number;
+  name: string;
+}
+
 export type PlayExecutionLevel = 'Best' | 'Good' | 'Poor' | 'Very Poor';
+export const playExeuctionLevelsConst = ['Best', 'Good', 'Poor', 'Very Poor'];
 
 // TODO get tags w plays

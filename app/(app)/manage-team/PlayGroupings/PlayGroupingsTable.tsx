@@ -59,7 +59,7 @@ export default function PlayGroupingsTable({ playGroupings }: { playGroupings: P
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Scrollable content area */}
-      <div className="flex-grow overflow-y-auto">
+      <div className="flex-grow overflow-scroll">
         <div className="px-2 space-y-2 pb-2">
           {Object.entries(groupedPlayGroupings).map(([type, group]) => (
             <div key={type}>

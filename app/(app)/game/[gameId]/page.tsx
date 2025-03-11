@@ -1,131 +1,305 @@
-import { getCurrentSession } from "@/auth/auth";
-import H1 from "@/components/H1";
-import { sql } from "@/db/db";
-import { Game, GameDrive, GamePlay, PlayPlayGroupingType } from "@/types/gameTypes";
-import { redirect } from "next/navigation";
+import { getCurrentSession } from "@/auth/auth"
+import H1 from "@/components/H1"
+import { sql } from "@/db/db"
+import type { Game, GameDrive, GamePlay, PlayPlayGroupingType, PlayTag } from "@/types/gameTypes"
+import type { PlayGrouping } from "@/types/playGroupingTypes"
+import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import { redirect } from "next/navigation"
+import type { TagOption } from "@/components/MultiTagSelect"
+import H2 from "@/components/H2"
+import AddDrive from "./AddDrive/AddDrive"
+import LogGamePlay from "./LogPlay/LogGamePlay"
+import GamePlaysTable from "./LogPlay/GamePlaysTable"
 
 export default async function Page({
-  params
+  params,
 }: {
-  params: Promise<{ gameId: string }>;
+  params: Promise<{ gameId: string }>
 }) {
-  const gameId = Number((await params).gameId);
-  if (!gameId) redirect("/dashboard");
+  const gameId = Number((await params).gameId)
+  if (!gameId) redirect("/dashboard")
 
-  // First check if the game's season_id is the user's current season_id
-  const { user } = await getCurrentSession();
-  const check = await sql`
-    SELECT 
-      g.season_id
-    FROM 
-      game g
-    WHERE 
-      g.id = ${gameId}
-  `;
+  // Get session user data
+  const { user } = await getCurrentSession()
 
-  if (check[0].season_id as number !== user?.current_season_id as number) {
-    redirect("/dashboard");
-  }
-
-  // Get game w drives, plays, and play_groupings
-  const result = await sql`
+  // Get all required data in a single query
+  const gameInfoQuery = await sql`
     SELECT 
       g.id,
       g.date,
       g.against,
       g.season_id,
-      gd.id AS drive_id,
-      gd.number_in_game AS drive_number,
-      p.id AS play_id,
-      p.drive_id,
-      p.film_number,
-      p.qb_in_id,
-      p.rb_carry_id,
-      p.yard_line,
-      p.down,
-      p.distance,
-      p.play_grouping_id,
-      p.play_call,
-      p.play_call_tags,
-      p.yards_gained,
-      p.result,
-      p.sack_on_qb,
-      p.rpo_read_keys,
-      p.read_option_read_keys,
-      p.pocket_presence,
-      p.pass_read,
-      p.pass_ball_placement,
-      p.scramble_execution,
-      p.qb_run_execution,
-      p.audible_opportunity_missed,
-      p.audible_called,
-      p.audible_success,
-      p.rb_vision,
-      p.rb_run_execution,
-      p.notes,
-      pg.id AS pg_id,
-      pg.name AS pg_name,
-      pg.type AS pg_type,
-      pg.team_id AS pg_team_id
+      s.team_id
     FROM 
       game g
-    LEFT JOIN 
-      drive gd ON g.id = gd.game_id
-    LEFT JOIN 
-      play p ON gd.id = p.drive_id
-    LEFT JOIN 
-      play_grouping pg ON p.play_grouping_id = pg.id
+    JOIN
+      season s ON g.season_id = s.id
     WHERE 
       g.id = ${gameId}
-    ORDER BY 
-      gd.number_in_game ASC, 
-      p.film_number ASC
-  `;
+  `
 
-  if (!result || result.length === 0) {
-    redirect("/dashboard");
+  if (!gameInfoQuery || gameInfoQuery.length === 0) {
+    redirect("/dashboard")
   }
 
-  const firstRow = result[0];
-  const game: Game = {
-    id: firstRow.id,
-    date: new Date(firstRow.date),
-    against: firstRow.against,
-    season_id: firstRow.season_id,
-    drives: []
-  };
+  const { season_id: seasonId, team_id: teamId, id, date, against } = gameInfoQuery[0]
 
-  const drivesMap: Record<number, GameDrive> = {};
+  // Check if the game's season ID matches the user's current season ID
+  if (seasonId !== (user?.current_season_id as number)) {
+    redirect("/dashboard")
+  }
 
-  result.forEach(row => {
-    if (!row.drive_id) return;
+  // Parallelize the remaining queries with Promise.all
+  const [seasonQBsData, seasonRBsData, playGroupingsData, tagsData, drivesData, playsData, playTagsData] =
+    await Promise.all([
+      // Query 1: Get season QBs
+      sql`
+      SELECT 
+        id, name, number, year, is_active, is_starter
+      FROM 
+        season_qb
+      WHERE 
+        season_id = ${seasonId}
+        AND is_active = true
+      ORDER BY
+        is_starter DESC, name ASC
+    `,
 
-    if (!drivesMap[row.drive_id]) {
-      const drive: GameDrive = {
-        id: row.drive_id,
-        game_id: row.id,
-        number_in_game: row.drive_number,
-        Plays: []
-      };
-      drivesMap[row.drive_id] = drive;
-      game.drives.push(drive);
+      // Query 2: Get season RBs
+      sql`
+      SELECT 
+        id, name, number, year, is_active, is_starter
+      FROM 
+        season_rb
+      WHERE 
+        season_id = ${seasonId}
+        AND is_active = true
+      ORDER BY
+        is_starter DESC, name ASC
+    `,
+
+      // Query 3: Get play groupings
+      sql`
+      SELECT 
+        id, name, type, team_id
+      FROM 
+        play_grouping
+      WHERE 
+        team_id = ${teamId}
+      ORDER BY
+        name ASC
+    `,
+
+      // Query 4: Get team tags
+      sql`
+      SELECT 
+        id, name, team_id
+      FROM 
+        tag
+      WHERE 
+        team_id = ${teamId}
+      ORDER BY
+        name ASC
+    `,
+
+      // Query 5: Get drives
+      sql`
+      SELECT 
+        id, number_in_game, game_id
+      FROM 
+        drive
+      WHERE 
+        game_id = ${gameId}
+      ORDER BY 
+        number_in_game ASC
+    `,
+
+      // Query 6: Get plays with play grouping info, QB info, and RB info
+      sql`
+      SELECT 
+        p.*,
+        pg.id AS pg_id,
+        pg.name AS pg_name,
+        pg.type AS pg_type,
+        pg.team_id AS pg_team_id,
+        
+        -- Add QB data
+        qb.id AS qb_id,
+        qb.name AS qb_name,
+        qb.number AS qb_number,
+        
+        -- Add RB data
+        rb.id AS rb_id,
+        rb.name AS rb_name,
+        rb.number AS rb_number,
+        
+        -- Include drive number for each play
+        d.number_in_game AS drive_number_in_game
+        
+      FROM 
+        play p
+      LEFT JOIN 
+        play_grouping pg ON p.play_grouping_id = pg.id
+      JOIN
+        drive d ON p.drive_id = d.id
+        
+      -- Join with QB data
+      LEFT JOIN
+        season_qb qb ON p.qb_in_id = qb.id
+        
+      -- Join with RB data
+      LEFT JOIN
+        season_rb rb ON p.rb_carry_id = rb.id
+        
+      WHERE 
+        d.game_id = ${gameId}
+      ORDER BY 
+        d.number_in_game ASC,
+        p.film_number ASC
+    `,
+
+      // Query 7: Get play tags
+      sql`
+      SELECT 
+        pt.play_id,
+        pt.tag_id,
+        t.name,
+        t.team_id
+      FROM 
+        play_tag pt
+      JOIN
+        tag t ON pt.tag_id = t.id
+      JOIN
+        play p ON pt.play_id = p.id
+      JOIN
+        drive d ON p.drive_id = d.id
+      WHERE 
+        d.game_id = ${gameId}
+    `,
+    ])
+
+  // Process the data
+  const seasonQBs: SeasonQB[] = seasonQBsData.map((qb) => ({
+    id: qb.id,
+    name: qb.name,
+    number: qb.number,
+    year: qb.year,
+    is_active: qb.is_active,
+    is_starter: qb.is_starter,
+    season_id: seasonId,
+    team_qb_id: 0, // This field is not needed for the form
+  }))
+
+  const seasonRBs: SeasonRB[] = seasonRBsData.map((rb) => ({
+    id: rb.id,
+    name: rb.name,
+    number: rb.number,
+    year: rb.year,
+    is_active: rb.is_active,
+    is_starter: rb.is_starter,
+    season_id: seasonId,
+    team_rb_id: 0, // This field is not needed for the form
+  }))
+
+  const playGroupings: PlayGrouping[] = playGroupingsData.map((pg) => ({
+    id: pg.id,
+    name: pg.name,
+    type: pg.type,
+    team_id: pg.team_id,
+  }))
+
+  const tags: TagOption[] = tagsData.map((tag) => ({
+    id: tag.id,
+    name: tag.name,
+    team_id: tag.team_id,
+  }))
+
+  // Create a map of play tags for faster lookup
+  const playTagsMap: Record<number, PlayTag[]> = {}
+
+  // Process play tags data
+  playTagsData.forEach((tag) => {
+    if (!playTagsMap[tag.play_id]) {
+      playTagsMap[tag.play_id] = []
     }
 
-    if (!row.play_id || !row.film_number) return;
+    playTagsMap[tag.play_id].push({
+      play_id: tag.play_id,
+      tag_id: tag.tag_id,
+      name: tag.name,
+      team_id: tag.team_id,
+    })
+  })
 
-    let playGroupingType: PlayPlayGroupingType | null = null;
+  // Build the game object
+  const game: Game = {
+    id,
+    date: new Date(date),
+    against,
+    season_id: seasonId,
+    drives: [],
+  }
+
+  // Create a map of drives for faster lookup
+  const drivesMap: Record<number, GameDrive> = {}
+
+  // Process drives data
+  drivesData.forEach((drive) => {
+    const gameDrive: GameDrive = {
+      id: drive.id,
+      game_id: gameId,
+      number_in_game: drive.number_in_game,
+      Plays: [],
+    }
+    drivesMap[drive.id] = gameDrive
+    game.drives.push(gameDrive)
+  })
+
+  // Extract unique play calls for filtering
+  const uniquePlayCalls = new Set<string>()
+
+  // Process plays data
+  playsData.forEach((row) => {
+    // Add play call to unique set if it exists
+    if (row.play_call) {
+      uniquePlayCalls.add(row.play_call)
+    }
+
+    let playGroupingType: PlayPlayGroupingType | null = null
     if (row.pg_id) {
       playGroupingType = {
         id: row.pg_id,
         name: row.pg_name,
         type: row.pg_type,
-        team_id: row.pg_team_id
-      };
+        team_id: row.pg_team_id,
+      }
     }
 
+    // Create QB and RB objects
+    const qbIn = row.qb_id
+      ? {
+          id: row.qb_id,
+          name: row.qb_name || "",
+          number: row.qb_number || 0,
+        }
+      : null
+
+    const rbCarry = row.rb_id
+      ? {
+          id: row.rb_id,
+          name: row.rb_name || "",
+          number: row.rb_number || 0,
+        }
+      : null
+
+    // Get tags for this play from the map
+    const playTags = playTagsMap[row.id] || []
+
     const play: GamePlay = {
-      id: row.play_id,
+      tags: playTags, // Add the tags from our map
+      id: row.id,
       drive_id: row.drive_id,
+      drive_number_in_game: row.drive_number_in_game,
       film_number: row.film_number,
       qb_in_id: row.qb_in_id,
       rb_carry_id: row.rb_carry_id,
@@ -134,6 +308,9 @@ export default async function Page({
       distance: row.distance,
       play_grouping_id: row.play_grouping_id,
       play_grouping_type: playGroupingType,
+      // Add QB and RB objects to play
+      qb_in: qbIn,
+      rb_carry: rbCarry,
       play_call: row.play_call,
       play_call_tags: row.play_call_tags,
       yards_gained: row.yards_gained,
@@ -151,55 +328,46 @@ export default async function Page({
       audible_success: row.audible_success,
       rb_vision: row.rb_vision,
       rb_run_execution: row.rb_run_execution,
-      notes: row.notes
-    };
+      notes: row.notes,
+    }
 
-    drivesMap[row.drive_id].Plays.push(play);
-  });
+    // Add play to its drive
+    if (drivesMap[row.drive_id]) {
+      drivesMap[row.drive_id].Plays.push(play)
+    }
+  })
+
+  // Filter out tags with null IDs
+  const validTags = tags.filter((tag) => tag.id !== null)
 
   return (
     <>
-      <H1 text={`${new Date(game.date).getFullYear()} vs ${game.against}`} />
-
+      <H1 text={`${game.date.getFullYear()} vs ${game.against}`} />
       <div className="mt-3">
-        <h2 className="text-base font-semibold mb-4">Drives</h2>
-        {game.drives.map((drive) => (
-          <div key={drive.id} className="mb-6 p-4 border rounded-lg">
-            <h3 className="text-xl font-semibold mb-2">Drive {drive.number_in_game}</h3>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-2 px-3 text-left">Play #</th>
-                    <th className="py-2 px-3 text-left">Down</th>
-                    <th className="py-2 px-3 text-left">Distance</th>
-                    <th className="py-2 px-3 text-left">Yard Line</th>
-                    <th className="py-2 px-3 text-left">Play Call</th>
-                    <th className="py-2 px-3 text-left">Play Group</th>
-                    <th className="py-2 px-3 text-left">Result</th>
-                    <th className="py-2 px-3 text-left">Yards</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {drive.Plays.map((play) => (
-                    <tr key={play.id} className="border-t">
-                      <td className="py-2 px-3">{play.film_number}</td>
-                      <td className="py-2 px-3">{play.down}</td>
-                      <td className="py-2 px-3">{play.distance}</td>
-                      <td className="py-2 px-3">{play.yard_line}</td>
-                      <td className="py-2 px-3">{play.play_call}</td>
-                      <td className="py-2 px-3">{play.play_grouping_type?.name || 'N/A'}</td>
-                      <td className="py-2 px-3">{play.result}</td>
-                      <td className="py-2 px-3">{play.yards_gained}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
+        <AddDrive gameId={game.id} />
+      </div>
+      <div className="mt-3">
+        <LogGamePlay
+          seasonQBs={seasonQBs}
+          seasonRBs={seasonRBs}
+          playGroupings={playGroupings}
+          gameId={gameId}
+          tags={tags}
+        />
+      </div>
+      <div className="mt-3">
+        <H2 text="Play Chart" />
+        <GamePlaysTable
+          drives={game.drives}
+          playGroupings={playGroupings}
+          tags={validTags}
+          playCalls={Array.from(uniquePlayCalls)}
+          seasonQBs={seasonQBs}
+          seasonRBs={seasonRBs}
+          gameId={gameId}
+        />
       </div>
     </>
-  );
+  )
 }
+

@@ -31,14 +31,14 @@ export default async function AppLayout({
                   <HomeIcon className="w-5" />
                 </Link>
               </Tooltip>
-              <Tooltip text="All Plays" position="right">
+              {/* <Tooltip text="All Plays" position="right">
                 <Link
                   href={"/all-plays"}
                   className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
                 >
                   <ChartArea className="w-5" />
                 </Link>
-              </Tooltip>
+              </Tooltip> */}
               {user.role === "Admin" && (
                 <Tooltip text="Manage Team" position="right">
                   <Link
