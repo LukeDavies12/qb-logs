@@ -407,34 +407,13 @@ const UpdatePlaySchema = z.object({
     .transform((val) => val === "true")
     .optional()
     .nullable(),
-  rbVision: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  rbRunExecution: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  pocketPresence: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  passRead: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  passBallPlacement: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  scrambleExecution: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
-  qbRunExecution: z
-    .string()
-    .optional()
-    .nullable() as z.ZodType<PlayExecutionLevel | null>,
+  rbVision: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  rbRunExecution: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  pocketPresence: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  passRead: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  passBallPlacement: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  scrambleExecution: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
+  qbRunExecution: z.string().optional().nullable() as z.ZodType<PlayExecutionLevel | null>,
   audibleOpportunityMissed: z
     .string()
     .transform((val) => val === "true")
@@ -452,18 +431,141 @@ const UpdatePlaySchema = z.object({
     .nullable(),
   notes: z.string().optional().nullable(),
   tags: z.string().optional().nullable(), // Will be JSON string of tag objects
-});
+})
 
-export async function updatePlayOnGame(
-  prevState: ActionStatePlay,
-  formData: FormData
-): Promise<ActionStatePlay> {
+export async function updatePlayOnGame(prevState: ActionStatePlay, formData: FormData): Promise<ActionStatePlay> {
   try {
-    // Convert FormData to object and log for debugging
-    const formDataObj = Object.fromEntries(formData);
+    // Convert FormData to object and map the prefixed field names to the expected names
+    const formDataObj: Record<string, FormDataEntryValue> = {};
+    
+    // Create a mapping of prefixed field names to expected schema field names
+    const fieldMapping: Record<string, string> = {
+      updateGameId: 'gameId',
+      updateDriveId: 'driveId',
+      updatePlayId: 'playId',
+      updateDriveNum: 'driveNum',
+      updateQb: 'qb',
+      updateRb: 'rb',
+      updateFilmNumber: 'filmNumber',
+      updateAt: 'at',
+      updateDown: 'down',
+      updateDistance: 'distance',
+      updatePlayGrouping: 'playGrouping',
+      updatePlayCall: 'playCall',
+      updatePlayCallTags: 'playCallTags',
+      updateResult: 'result',
+      updateYardsGained: 'yardsGained',
+      updateRpoReadKeys: 'rpoReadKeys',
+      updateReadOptionReadKeys: 'readOptionReadKeys',
+      updateSackOnQb: 'sackOnQB',
+      updateRbVision: 'rbVision',
+      updateRbRunExecution: 'rbRunExecution',
+      updatePocketPresence: 'pocketPresence',
+      updatePassRead: 'passRead',
+      updatePassBallPlacement: 'passBallPlacement',
+      updateScrambleExecution: 'scrambleExecution',
+      updateQbRunExecution: 'qbRunExecution',
+      updateAudibleOpportunityMissed: 'audibleOpportunityMissed',
+      updateAudibleCalled: 'audibleCalled',
+      updateAudibleSuccess: 'audibleSuccess',
+      updateNotes: 'notes',
+      updateTags: 'tags'
+    };
+
+    // Map the form data to the expected field names
+    for (const [key, value] of formData.entries()) {
+      const mappedKey = fieldMapping[key] || key;
+      formDataObj[mappedKey] = value;
+    }
+
+    // Check if any fields need to be explicitly set to null
+    // This handles the case where fields aren't present in the form data
+    // because they were reset when play grouping changed
+    const playGroupingId = formDataObj.playGrouping;
+
+    // Get the current play data to compare if play grouping changed
+    const [currentPlay] = await sql`
+      SELECT play_grouping_id FROM play WHERE id = ${formDataObj.playId}
+    `;
+
+    // If play grouping changed, we need to reset certain fields to null
+    const playGroupingChanged = currentPlay && currentPlay.play_grouping_id !== Number(playGroupingId);
+
+    if (playGroupingChanged) {
+      // These fields should be explicitly set to null if not present in form data
+      const fieldsToReset = [
+        "rpoReadKeys",
+        "readOptionReadKeys",
+        "pocketPresence",
+        "passRead",
+        "passBallPlacement",
+        "scrambleExecution",
+        "qbRunExecution",
+        "audibleOpportunityMissed",
+        "audibleCalled",
+        "audibleSuccess",
+        "rbVision",
+        "rbRunExecution",
+        "sackOnQB",
+      ];
+
+      // Set fields to null if they're not in the form data
+      fieldsToReset.forEach((field) => {
+        if (formDataObj[field] === undefined) {
+          formDataObj[field] = null as unknown as FormDataEntryValue;
+        }
+      });
+    }
+
     const data = UpdatePlaySchema.parse(formDataObj);
 
-    // Update the play
+    // Rest of the function remains the same...
+    // (continue with existing logic for updating the play)
+
+    if (data.driveNum) {
+      // Get the current drive information
+      const [currentDriveInfo] = await sql`
+        SELECT d.number_in_game, d.game_id
+        FROM play p
+        JOIN drive d ON p.drive_id = d.id
+        WHERE p.id = ${data.playId}
+      `;
+
+      // If the drive number has changed, we need to update the drive_id
+      if (currentDriveInfo && currentDriveInfo.number_in_game !== data.driveNum) {
+        // Find the drive with the new drive number
+        const [newDrive] = await sql`
+          SELECT id 
+          FROM drive 
+          WHERE game_id = ${data.gameId} AND number_in_game = ${data.driveNum}
+        `;
+
+        if (newDrive) {
+          // Update the play's drive_id
+          await sql`
+            UPDATE play 
+            SET drive_id = ${newDrive.id}
+            WHERE id = ${data.playId}
+          `;
+        } else {
+          // Drive doesn't exist, create it
+          const [createdDrive] = await sql`
+            INSERT INTO drive (game_id, number_in_game)
+            VALUES (${data.gameId}, ${data.driveNum})
+            RETURNING id
+          `;
+
+          // Update the play's drive_id
+          await sql`
+            UPDATE play 
+            SET drive_id = ${createdDrive.id}
+            WHERE id = ${data.playId}
+          `;
+        }
+      }
+    }
+
+    // Update the play with explicit null handling for fields that might be missing
     await sql`
       UPDATE play SET
         film_number = ${data.filmNumber},
@@ -477,19 +579,19 @@ export async function updatePlayOnGame(
         play_call_tags = ${data.playCallTags},
         yards_gained = ${data.yardsGained},
         result = ${data.result},
-        sack_on_qb = ${data.sackOnQB},
-        rpo_read_keys = ${data.rpoReadKeys},
-        read_option_read_keys = ${data.readOptionReadKeys},
-        pocket_presence = ${data.pocketPresence},
-        pass_read = ${data.passRead},
-        pass_ball_placement = ${data.passBallPlacement},
-        scramble_execution = ${data.scrambleExecution},
-        qb_run_execution = ${data.qbRunExecution},
-        audible_opportunity_missed = ${data.audibleOpportunityMissed},
-        audible_called = ${data.audibleCalled},
-        audible_success = ${data.audibleSuccess},
-        rb_vision = ${data.rbVision},
-        rb_run_execution = ${data.rbRunExecution},
+        sack_on_qb = ${data.sackOnQB === undefined ? null : data.sackOnQB},
+        rpo_read_keys = ${data.rpoReadKeys === undefined ? null : data.rpoReadKeys},
+        read_option_read_keys = ${data.readOptionReadKeys === undefined ? null : data.readOptionReadKeys},
+        pocket_presence = ${data.pocketPresence ?? null},
+        pass_read = ${data.passRead == null ? null : data.passRead},
+        pass_ball_placement = ${data.passBallPlacement ?? null},
+        scramble_execution = ${data.scrambleExecution ?? null},
+        qb_run_execution = ${data.qbRunExecution ?? null},
+        audible_opportunity_missed = ${data.audibleOpportunityMissed === undefined ? null : data.audibleOpportunityMissed},
+        audible_called = ${data.audibleCalled === undefined ? null : data.audibleCalled},
+        audible_success = ${data.audibleSuccess === undefined ? null : data.audibleSuccess},
+        rb_vision = ${data.rbVision ?? null},
+        rb_run_execution = ${data.rbRunExecution ?? null},
         notes = ${data.notes}
       WHERE id = ${data.playId}
     `;
@@ -503,12 +605,8 @@ export async function updatePlayOnGame(
         await sql`DELETE FROM play_tag WHERE play_id = ${data.playId}`;
 
         // Handle existing tags
-        const existingTags = tags.filter(
-          (tag: { id: number | null }) => tag.id !== null
-        );
-        const newTags = tags.filter(
-          (tag: { id: number | null }) => tag.id === null
-        );
+        const existingTags = tags.filter((tag: { id: number | null }) => tag.id !== null);
+        const newTags = tags.filter((tag: { id: number | null }) => tag.id === null);
 
         // Insert play_tag associations for existing tags
         if (existingTags.length > 0) {

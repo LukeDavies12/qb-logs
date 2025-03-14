@@ -2,7 +2,6 @@ import { getCurrentSession } from "@/auth/auth";
 import H1 from "@/components/H1";
 import H2 from "@/components/H2";
 import { sql } from "@/db/db";
-import { PlayGrouping } from "@/types/playGroupingTypes";
 import { SeasonQB, SeasonRB } from "@/types/seasonType";
 import { Invite, User } from "@/types/userTypes";
 import { redirect } from "next/navigation";
@@ -14,6 +13,7 @@ import SeasonRBsTable from "./SeasonRBs/SeasonRBsTable";
 import AddSeasonRB from "./SeasonRBs/AddSeasonRB";
 import AddTeamInvite from "./Users/AddTeamInvite";
 import UsersAndInvitesTable from "./Users/UsersTable";
+import { PlayGrouping } from "@/types/gameTypes";
 
 interface ManageTeamData {
   currentUser: User;

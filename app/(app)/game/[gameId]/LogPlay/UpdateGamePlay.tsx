@@ -1,12 +1,20 @@
 "use client"
 
+import type React from "react"
+
 import MultilineInput from "@/components/MultilineInput"
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useTransition } from "react"
 import { useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import type { SeasonQB, SeasonRB } from "@/types/seasonType"
-import type { PlayGrouping, PlayGroupingType } from "@/types/playGroupingTypes"
-import { playExeuctionLevelsConst, type PlayResult, playResultsConst, type GamePlay } from "@/types/gameTypes"
+import {
+  playExeuctionLevelsConst,
+  type PlayResult,
+  playResultsConst,
+  type GamePlay,
+  type PlayGrouping,
+  type PlayGroupingType,
+} from "@/types/gameTypes"
 import Combobox, { type ComboBoxRef } from "@/components/Combobox"
 import TextInput from "@/components/TextInput"
 import { getVisibleFields } from "@/types/fieldVisibilityConfig"
@@ -48,6 +56,7 @@ export default function UpdatePlayForm({
   driveNum: number
   setIsModalOpen: (isOpen: boolean) => void
 }) {
+  console.log("UpdatePlayForm", play)
   const initialPlayType = play.play_grouping_type?.type.toString() || ""
   const initialPlayResult = play.result || ""
 
@@ -58,9 +67,12 @@ export default function UpdatePlayForm({
   )
   const [audibleCalled, setAudibleCalled] = useState<boolean>(play.audible_called || false)
   const [audibleSuccess, setAudibleSuccess] = useState<boolean>(play.audible_success || false)
-  const [rpoReadMade, setRpoReadMade] = useState<boolean>(play.rpo_read_keys || true)
-  const [readOptionReadKeys, setReadOptionReadKeys] = useState<boolean>(play.read_option_read_keys || true)
+  const [rpoReadMade, setRpoReadMade] = useState<boolean>(play.rpo_read_keys === true)
+  const [readOptionReadKeys, setReadOptionReadKeys] = useState<boolean>(
+    play.read_option_read_keys === false ? false : true,
+  )
   const [sackOnQB, setSackOnQB] = useState<boolean>(play.sack_on_qb || false)
+  // Initialize formModified to false explicitly
   const [formModified, setFormModified] = useState<boolean>(false)
   const [selectedTags, setSelectedTags] = useState<TagOption[]>(
     play.tags?.map((tag) => ({
@@ -69,6 +81,14 @@ export default function UpdatePlayForm({
       team_id: tag.team_id,
     })) || [],
   )
+
+  // Store initial values for comparison
+  const initialRpoReadMade = play.rpo_read_keys === false ? false : true
+  const initialReadOptionReadKeys = play.read_option_read_keys === false ? false : true
+  const initialAudibleOpportunityMissed = play.audible_opportunity_missed || false
+  const initialAudibleCalled = play.audible_called || false
+  const initialAudibleSuccess = play.audible_success || false
+  const initialSackOnQB = play.sack_on_qb || false
 
   // Track combobox values in state
   const [qbValue, setQbValue] = useState<string>(play.qb_in_id.toString())
@@ -99,8 +119,8 @@ export default function UpdatePlayForm({
   const scrambleExecutionRef = useRef<ComboBoxRef>(null)
   const qbRunExecutionRef = useRef<ComboBoxRef>(null)
   const tagsSelectRef = useRef<MultiTagSelectRef>(null)
-
   const formRef = useRef<HTMLFormElement>(null)
+  const initialRenderRef = useRef(true) // Create ref outside of useEffect
 
   // Convert play tags to the format expected by MultiTagSelect
   const initialTags =
@@ -134,105 +154,166 @@ export default function UpdatePlayForm({
     audible_opportunity_missed: play.audible_opportunity_missed || false,
     audible_called: play.audible_called || false,
     audible_success: play.audible_success || false,
-    rpo_read_keys: play.rpo_read_keys || true,
-    read_option_read_keys: play.read_option_read_keys || true,
+    rpo_read_keys: play.rpo_read_keys === true,
+    read_option_read_keys: play.read_option_read_keys === false ? false : true,
     sack_on_qb: play.sack_on_qb || false,
     notes: play.notes || "",
     tags: JSON.stringify(initialTags.map((tag) => tag.id).sort()),
   }
 
-  // Function to check if the form has been modified
   const checkFormModified = () => {
+    if (rpoReadMade !== initialRpoReadMade) {
+      return true
+    }
+
+    if (readOptionReadKeys !== initialReadOptionReadKeys) {
+      return true
+    }
+
+    if (audibleOpportunityMissed !== initialAudibleOpportunityMissed) {
+      return true
+    }
+
+    if (audibleCalled !== initialAudibleCalled) {
+      return true
+    }
+
+    if (audibleSuccess !== initialAudibleSuccess) {
+      return true
+    }
+
+    if (sackOnQB !== initialSackOnQB) {
+      return true
+    }
+
+    // Check combobox values
+    if (qbValue !== play.qb_in_id.toString()) {
+      return true
+    }
+
+    if (rbValue !== (play.rb_carry_id?.toString() || "")) {
+      return true
+    }
+
+    if (playGroupingValue !== play.play_grouping_id.toString()) {
+      return true
+    }
+
+    if (resultValue !== (play.result || "")) {
+      return true
+    }
+
+    if (rbVisionValue !== (play.rb_vision || "")) {
+      return true
+    }
+
+    if (rbRunExecutionValue !== (play.rb_run_execution || "")) {
+      return true
+    }
+
+    if (pocketPresenceValue !== (play.pocket_presence || "")) {
+      return true
+    }
+
+    if (passReadValue !== (play.pass_read || "")) {
+      return true
+    }
+
+    if (passBallPlacementValue !== (play.pass_ball_placement || "")) {
+      return true
+    }
+
+    if (qbRunExecutionValue !== (play.qb_run_execution || "")) {
+      return true
+    }
+
+    if (scrambleExecutionValue !== (play.scramble_execution || "")) {
+      return true
+    }
+
+    const initialTagIds = initialTags
+      .map((tag) => tag.id)
+      .sort()
+      .join(",")
+    const currentTagIds = selectedTags
+      .map((tag) => tag.id)
+      .sort()
+      .join(",")
+    if (initialTagIds !== currentTagIds) {
+      console.log("Tags changed")
+      return true
+    }
+
     if (!formRef.current) return false
 
     const formData = new FormData(formRef.current)
-    const currentFormState: Record<string, any> = {}
 
-    // Extract values from form data
-    formData.forEach((value, key) => {
-      // Map form field names to state keys if needed
-      if (key === "driveNum") {
-        currentFormState.drive_num = value
-      } else if (key === "filmNumber") {
-        currentFormState.film_number = value
-      } else if (key === "playCall") {
-        currentFormState.play_call = value
-      } else if (key === "playCallTags") {
-        currentFormState.play_call_tags = value
-      } else if (key === "yardsGained") {
-        currentFormState.yards_gained = value
-      } else if (key === "at") {
-        currentFormState.yard_line = value
-      } else {
-        currentFormState[key] = value
-      }
-    })
+    const driveNumValue = formData.get("updateDriveNum")
+    if (driveNumValue && driveNumValue.toString() !== driveNum.toString()) {
+      console.log("Drive Number changed")
+      return true
+    }
 
-    // Add combobox values from state
-    currentFormState.qb_in_id = qbValue
-    currentFormState.rb_carry_id = rbValue
-    currentFormState.play_grouping_id = playGroupingValue
-    currentFormState.result = resultValue
-    currentFormState.rb_vision = rbVisionValue
-    currentFormState.rb_run_execution = rbRunExecutionValue
-    currentFormState.pocket_presence = pocketPresenceValue
-    currentFormState.pass_read = passReadValue
-    currentFormState.pass_ball_placement = passBallPlacementValue
-    currentFormState.qb_run_execution = qbRunExecutionValue
-    currentFormState.scramble_execution = scrambleExecutionValue
+    const filmNumberValue = formData.get("updateFilmNumber")
+    if (filmNumberValue && filmNumberValue.toString() !== play.film_number.toString()) {
+      console.log("Film Number changed")
+      return true
+    }
 
-    // Add boolean values that might not be in form data
-    currentFormState.audible_opportunity_missed = audibleOpportunityMissed
-    currentFormState.audible_called = audibleCalled
-    currentFormState.audible_success = audibleSuccess
-    currentFormState.rpo_read_keys = rpoReadMade
-    currentFormState.read_option_read_keys = readOptionReadKeys
-    currentFormState.sack_on_qb = sackOnQB
+    const atValue = formData.get("updateAt")
+    if (atValue && atValue.toString() !== play.yard_line.toString()) {
+      console.log("Yard Line changed")
+      return true
+    }
 
-    // Add tags
-    currentFormState.tags = JSON.stringify(selectedTags.map((tag) => tag.id).sort())
+    const downValue = formData.get("updateDown")
+    if (downValue && downValue.toString() !== play.down.toString()) {
+      console.log("Down changed")
+      return true
+    }
 
-    // Compare current state with initial state
-    for (const key in initialFormState) {
-      if (Object.prototype.hasOwnProperty.call(initialFormState, key)) {
-        // Skip hidden fields
-        if (key === "gameId" || key === "playId" || key === "driveId") continue
+    const distanceValue = formData.get("updateDistance")
+    if (distanceValue && distanceValue.toString() !== play.distance.toString()) {
+      console.log("Distance changed")
+      return true
+    }
 
-        const initialValue = initialFormState[key as keyof typeof initialFormState]
-        const currentValue = currentFormState[key]
+    const playCallValue = formData.get("updatePlayCall")
+    if (playCallValue && playCallValue.toString() !== play.play_call) {
+      console.log("Play Call changed")
+      return true
+    }
 
-        // If any value is different, the form has been modified
-        if (initialValue !== currentValue && currentValue !== undefined) {
-          console.log(`Form modified: ${key} changed from ${initialValue} to ${currentValue}`)
-          return true
-        }
-      }
+    const playCallTagsValue = formData.get("updatePlayCallTags")
+    if (playCallTagsValue && playCallTagsValue.toString() !== (play.play_call_tags || "")) {
+      console.log("Play Call Tags changed")
+      return true
+    }
+
+    const yardsGainedValue = formData.get("updateYardsGained")
+    if (yardsGainedValue && yardsGainedValue.toString() !== play.yards_gained.toString()) {
+      console.log("Yards Gained changed")
+      return true
+    }
+
+    const notesValue = formData.get("updateNotes")
+    if (notesValue && notesValue.toString() !== (play.notes || "")) {
+      console.log("Notes changed")
+      return true
     }
 
     return false
   }
 
-  // Set up form change detection
+  // Replace the existing useEffect for form change detection with this improved version
   useEffect(() => {
-    const handleFormChange = () => {
-      setFormModified(checkFormModified())
-    }
+    // Skip the initial render check since we're using the dependency array properly
+    const isModified = checkFormModified()
+    console.log("Form modified check:", isModified)
+    setFormModified(isModified)
 
-    const form = formRef.current
-    if (form) {
-      // Run the check immediately after mounting
-      setTimeout(() => {
-        handleFormChange()
-      }, 0)
-
-      form.addEventListener("input", handleFormChange)
-      form.addEventListener("change", handleFormChange)
-
-      return () => {
-        form.removeEventListener("input", handleFormChange)
-        form.removeEventListener("change", handleFormChange)
-      }
-    }
+    // No need for event listeners since we're directly checking on state changes
+    // This will run whenever any of the dependency values change
   }, [
     audibleOpportunityMissed,
     audibleCalled,
@@ -241,7 +322,6 @@ export default function UpdatePlayForm({
     readOptionReadKeys,
     sackOnQB,
     selectedTags,
-    // Add combobox values to dependency array
     qbValue,
     rbValue,
     playGroupingValue,
@@ -255,12 +335,6 @@ export default function UpdatePlayForm({
     scrambleExecutionValue,
   ])
 
-  // Ensure form starts as unmodified
-  useEffect(() => {
-    setFormModified(false)
-  }, [])
-
-  // Add this effect to close the modal after successful update
   useEffect(() => {
     if (state?.success) {
       // Wait for 150ms to show the success message before closing
@@ -272,22 +346,51 @@ export default function UpdatePlayForm({
     }
   }, [state?.success, setIsModalOpen])
 
+  // Add a loading state to track when the form is being submitted
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+  // Modify the handleSubmit function to double-check if the form is modified
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Force a final check to ensure the form is actually modified
+    const isActuallyModified = checkFormModified()
+
+    if (!isActuallyModified) {
+      console.log("Form not modified, preventing submission")
+      return
+    }
+
+    console.log("Form is modified, allowing submission")
+    setIsSubmitting(true)
+
+    const form = e.target as HTMLFormElement
+    startTransition(() => {
+      formAction(new FormData(form))
+    })
+  }
+
+  const [isPending, startTransition] = useTransition()
+
   return (
-    <form className="p-2 bg-white text-sm" action={formAction} ref={formRef}>
-      <input type="hidden" name="gameId" value={gameId} />
-      <input type="hidden" name="playId" value={play.id} />
-      <input type="hidden" name="driveId" value={play.drive_id} />
+    <form className="p-2 bg-white text-sm" action={formAction} ref={formRef} onSubmit={handleSubmit}>
+      <input type="hidden" name="updateGameId" value={gameId} />
+      <input type="hidden" name="updatePlayId" value={play.id} />
+      <input type="hidden" name="updateDriveId" value={play.drive_id} />
 
       <div className="md:grid md:grid-cols-3 md:gap-1 lg:grid lg:grid-cols-12 lg:gap-1 space-y-2 lg:space-y-0">
         <div className="lg:col-span-2 lg:flex lg:items-center">
           <div className="w-full">
             <ComboboxWKeys
               label="QB"
-              id="qb"
-              name="qb"
+              id="updateQb"
+              name="updateQb"
               options={seasonQBs?.map((qb) => ({ label: qb.name, value: qb.id.toString() })) || []}
               defaultSelected={play.qb_in_id.toString()}
-              onChange={(value) => setQbValue(value)}
+              onChange={(value) => {
+                setQbValue(value)
+                setFormModified(checkFormModified())
+              }}
               required
             />
           </div>
@@ -295,8 +398,8 @@ export default function UpdatePlayForm({
         <div className="lg:col-span-3 lg:flex lg:items-center lg:gap-0.5">
           <div>
             <TextInput
-              id="driveNum"
-              name="driveNum"
+              id="updateDriveNum"
+              name="updateDriveNum"
               label="Drive #"
               defaultValue={driveNum.toString()}
               type="number"
@@ -305,8 +408,8 @@ export default function UpdatePlayForm({
           </div>
           <div>
             <TextInput
-              id="filmNumber"
-              name="filmNumber"
+              id="updateFilmNumber"
+              name="updateFilmNumber"
               label="Hudl #"
               defaultValue={play.film_number.toString()}
               type="number"
@@ -314,15 +417,29 @@ export default function UpdatePlayForm({
             />
           </div>
           <div>
-            <TextInput id="at" name="at" label="At" defaultValue={play.yard_line.toString()} type="number" required />
-          </div>
-          <div>
-            <TextInput id="down" name="down" label="Down" defaultValue={play.down.toString()} type="number" required />
+            <TextInput
+              id="updateAt"
+              name="updateAt"
+              label="At"
+              defaultValue={play.yard_line.toString()}
+              type="number"
+              required
+            />
           </div>
           <div>
             <TextInput
-              id="distance"
-              name="distance"
+              id="updateDown"
+              name="updateDown"
+              label="Down"
+              defaultValue={play.down.toString()}
+              type="number"
+              required
+            />
+          </div>
+          <div>
+            <TextInput
+              id="updateDistance"
+              name="updateDistance"
               label="Dist"
               defaultValue={play.distance.toString()}
               type="number"
@@ -333,8 +450,8 @@ export default function UpdatePlayForm({
         <div className="lg:col-span-2 lg:flex lg:items-center lg:gap-0.5">
           <div className="w-full">
             <TextInput
-              id="playCall"
-              name="playCall"
+              id="updatePlayCall"
+              name="updatePlayCall"
               label="Play Call"
               defaultValue={play.play_call}
               type="text"
@@ -343,8 +460,8 @@ export default function UpdatePlayForm({
           </div>
           <div className="w-full">
             <TextInput
-              id="playCallTags"
-              name="playCallTags"
+              id="updatePlayCallTags"
+              name="updatePlayCallTags"
               label="Call Tags"
               defaultValue={play.play_call_tags || ""}
               type="text"
@@ -355,13 +472,41 @@ export default function UpdatePlayForm({
           <div className="w-full">
             <ComboboxWKeys
               label="Play Grouping"
-              id="playGrouping"
-              name="playGrouping"
+              id="updatePlayGrouping"
+              name="updatePlayGrouping"
               placeholder="Select..."
               onChange={(value) => {
                 const selectedPlayGrouping = playGroupings.find((pg) => pg.id.toString() === value)
-                setPlayType(selectedPlayGrouping ? selectedPlayGrouping.type.toString() : "")
+                const newPlayType = selectedPlayGrouping ? selectedPlayGrouping.type.toString() : ""
+
+                if (newPlayType !== playType) {
+                  setSackOnQB(false)
+                  setRpoReadMade(false)
+                  setReadOptionReadKeys(false)
+                  setAudibleOpportunityMissed(false)
+                  setAudibleCalled(false)
+                  setAudibleSuccess(false)
+
+                  setPocketPresenceValue("")
+                  setPassReadValue("")
+                  setPassBallPlacementValue("")
+                  setScrambleExecutionValue("")
+                  setQbRunExecutionValue("")
+                  setRbVisionValue("")
+                  setRbRunExecutionValue("")
+
+                  if (pocketPresenceRef.current) pocketPresenceRef.current.reset()
+                  if (passReadExecutionRef.current) passReadExecutionRef.current.reset()
+                  if (passBallPlacementRef.current) passBallPlacementRef.current.reset()
+                  if (scrambleExecutionRef.current) scrambleExecutionRef.current.reset()
+                  if (qbRunExecutionRef.current) qbRunExecutionRef.current.reset()
+                  if (rbVisionExecutionRef.current) rbVisionExecutionRef.current.reset()
+                  if (rbRunExecutionRef.current) rbRunExecutionRef.current.reset()
+                }
+
+                setPlayType(newPlayType)
                 setPlayGroupingValue(value)
+                setFormModified(true) 
               }}
               options={
                 playGroupings?.map((pg) => ({
@@ -379,12 +524,13 @@ export default function UpdatePlayForm({
           <div className="w-full">
             <Combobox
               label="Result"
-              id="result"
-              name="result"
+              id="updateResult"
+              name="updateResult"
               options={playResultsConst?.map((result) => result)}
               onChange={(value) => {
                 setPlayResult(value as PlayResult)
                 setResultValue(value)
+                setFormModified(checkFormModified())
               }}
               defaultValue={play.result}
               required
@@ -395,8 +541,8 @@ export default function UpdatePlayForm({
         <div className="lg:col-span-1 lg:flex lg:items-center">
           <div className="w-full">
             <TextInput
-              id="yardsGained"
-              name="yardsGained"
+              id="updateYardsGained"
+              name="updateYardsGained"
               label="Yards"
               defaultValue={play.yards_gained.toString()}
               type="number"
@@ -413,13 +559,22 @@ export default function UpdatePlayForm({
           return (
             <div key={field} className="lg:col-span-2">
               {camelField === "rpoReadKeys" && (
-                <YesNoToggle label="RPO Read Made" value={rpoReadMade} onChange={setRpoReadMade} name="rpoReadKeys" />
+                <YesNoToggle
+                  label="RPO Read Made"
+                  value={rpoReadMade}
+                  onChange={(value) => {
+                    console.log("RPO Read Made changed from", rpoReadMade, "to", value)
+                    setRpoReadMade(value)
+                    setFormModified(checkFormModified())
+                  }}
+                  name="updateRpoReadKeys"
+                />
               )}
               {camelField === "rbIn" && (
                 <ComboboxWKeys
                   label="RB"
-                  id="rb"
-                  name="rb"
+                  id="updateRb"
+                  name="updateRb"
                   placeholder="Select RB..."
                   options={
                     seasonRBs?.map((rb) => ({
@@ -428,51 +583,66 @@ export default function UpdatePlayForm({
                     })) || []
                   }
                   defaultSelected={play.rb_carry_id?.toString()}
-                  onChange={(value) => setRbValue(value)}
+                  onChange={(value) => {
+                    setRbValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={rbComboboxRef}
                 />
               )}
               {camelField === "rbVision" && (
                 <Combobox
                   label="RB Vision Grade"
-                  id="rbVision"
-                  name="rbVision"
+                  id="updateRbVision"
+                  name="updateRbVision"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.rb_vision || undefined}
-                  onChange={(value) => setRbVisionValue(value)}
+                  onChange={(value) => {
+                    setRbVisionValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={rbVisionExecutionRef}
                 />
               )}
               {camelField === "rbRunExecution" && (
                 <Combobox
                   label="RB Run Grade"
-                  id="rbRunExecution"
-                  name="rbRunExecution"
+                  id="updateRbRunExecution"
+                  name="updateRbRunExecution"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.rb_run_execution || undefined}
-                  onChange={(value) => setRbRunExecutionValue(value)}
+                  onChange={(value) => {
+                    setRbRunExecutionValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={rbRunExecutionRef}
                 />
               )}
               {camelField === "pocketPresence" && (
                 <Combobox
                   label="Pocket Presence Grade"
-                  id="pocketPresence"
-                  name="pocketPresence"
+                  id="updatePocketPresence"
+                  name="updatePocketPresence"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.pocket_presence || undefined}
-                  onChange={(value) => setPocketPresenceValue(value)}
+                  onChange={(value) => {
+                    setPocketPresenceValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={pocketPresenceRef}
                 />
               )}
               {camelField === "passRead" && (
                 <Combobox
                   label="Pass Read Grade"
-                  id="passRead"
-                  name="passRead"
+                  id="updatePassRead"
+                  name="updatePassRead"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.pass_read || undefined}
-                  onChange={(value) => setPassReadValue(value)}
+                  onChange={(value) => {
+                    setPassReadValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={passReadExecutionRef}
                 />
               )}
@@ -480,45 +650,65 @@ export default function UpdatePlayForm({
                 <YesNoToggle
                   label="Read Key(s)"
                   value={readOptionReadKeys}
-                  onChange={setReadOptionReadKeys}
-                  name="readOptionReadKeys"
+                  onChange={(value) => {
+                    setReadOptionReadKeys(value)
+                    setFormModified(checkFormModified())
+                  }}
+                  name="updateReadOptionReadKeys"
                 />
               )}
               {camelField === "passBallPlacement" && (
                 <Combobox
                   label="Pass Ball Placement Grade"
-                  id="passBallPlacement"
-                  name="passBallPlacement"
+                  id="updatePassBallPlacement"
+                  name="updatePassBallPlacement"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.pass_ball_placement || undefined}
-                  onChange={(value) => setPassBallPlacementValue(value)}
+                  onChange={(value) => {
+                    setPassBallPlacementValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={passBallPlacementRef}
                 />
               )}
               {camelField === "qbRunExecution" && (
                 <Combobox
                   label="QB Run Grade"
-                  id="qbRunExecution"
-                  name="qbRunExecution"
+                  id="updateQbRunExecution"
+                  name="updateQbRunExecution"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.qb_run_execution || undefined}
-                  onChange={(value) => setQbRunExecutionValue(value)}
+                  onChange={(value) => {
+                    setQbRunExecutionValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={qbRunExecutionRef}
                 />
               )}
               {camelField === "scrambleExecution" && (
                 <Combobox
                   label="Scramble Grade"
-                  id="scrambleExecution"
-                  name="scrambleExecution"
+                  id="updateScrambleExecution"
+                  name="updateScrambleExecution"
                   options={playExeuctionLevelsConst?.map((level) => level) || []}
                   defaultValue={play.scramble_execution || undefined}
-                  onChange={(value) => setScrambleExecutionValue(value)}
+                  onChange={(value) => {
+                    setScrambleExecutionValue(value)
+                    setFormModified(checkFormModified())
+                  }}
                   ref={scrambleExecutionRef}
                 />
               )}
               {camelField === "sackOnQb" && (
-                <YesNoToggle label="Sack on QB" value={sackOnQB} onChange={setSackOnQB} name="sackOnQb" />
+                <YesNoToggle
+                  label="Sack on QB"
+                  value={sackOnQB}
+                  onChange={(value) => {
+                    setSackOnQB(value)
+                    setFormModified(checkFormModified())
+                  }}
+                  name="updateSackOnQb"
+                />
               )}
             </div>
           )
@@ -533,16 +723,18 @@ export default function UpdatePlayForm({
             value={audibleOpportunityMissed}
             onChange={(value) => {
               setAudibleOpportunityMissed(value)
+              setFormModified(checkFormModified())
             }}
-            name="audibleOpportunityMissed"
+            name="updateAudibleOpportunityMissed"
           />
           <YesNoToggle
             label="Audible Called"
             value={audibleCalled}
             onChange={(value) => {
               setAudibleCalled(value)
+              setFormModified(checkFormModified())
             }}
-            name="audibleCalled"
+            name="updateAudibleCalled"
             className="mt-2"
           />
           {audibleCalled && (
@@ -551,16 +743,17 @@ export default function UpdatePlayForm({
               value={audibleSuccess}
               onChange={(value) => {
                 setAudibleSuccess(value)
+                setFormModified(checkFormModified())
               }}
-              name="audibleSuccess"
+              name="updateAudibleSuccess"
               className="mt-2"
             />
           )}
         </div>
         <div className="lg:col-span-5">
           <MultilineInput
-            id="notes"
-            name="notes"
+            id="updateNotes"
+            name="updateNotes"
             label="Notes"
             defaultValue={play.notes || ""}
             placeholder="Enter any additional notes about the play..."
@@ -569,19 +762,29 @@ export default function UpdatePlayForm({
         <div className="lg:col-span-5">
           <MultiTagSelect
             label="Tags"
-            id="tags"
-            name="tags"
+            id="updateTags"
+            name="updateTags"
             options={tags}
             placeholder="Add tags..."
             defaultSelected={initialTags}
-            onChange={(tags) => setSelectedTags(tags)}
+            onChange={(tags) => {
+              setSelectedTags(tags)
+              setFormModified(checkFormModified())
+            }}
             ref={tagsSelectRef}
           />
         </div>
       </div>
-      <SubmitButton disabled={!formModified} />
+      <SubmitButton disabled={!formModified || isSubmitting} />
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
       {state?.success && <p className="text-sm text-green-600 mt-2">Play updated successfully!</p>}
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-md shadow-lg">
+            <p className="text-center font-medium">Updating play...</p>
+          </div>
+        </div>
+      )}
     </form>
   )
 }

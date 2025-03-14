@@ -1,12 +1,16 @@
 "use client"
 
 import MultilineInput from "@/components/MultilineInput"
-import { useRef, useState, useCallback, useEffect } from "react"
-import { useActionState } from "react"
+import { useRef, useState, useCallback, useEffect, useActionState } from "react"
 import { useFormStatus } from "react-dom"
 import type { SeasonQB, SeasonRB } from "@/types/seasonType"
-import type { PlayGrouping, PlayGroupingType } from "@/types/playGroupingTypes"
-import { playExeuctionLevelsConst, type PlayResult, playResultsConst } from "@/types/gameTypes"
+import {
+  playExeuctionLevelsConst,
+  type PlayGrouping,
+  type PlayGroupingType,
+  type PlayResult,
+  playResultsConst,
+} from "@/types/gameTypes"
 import Combobox, { type ComboBoxRef } from "@/components/Combobox"
 import TextInput from "@/components/TextInput"
 import { getVisibleFields } from "@/types/fieldVisibilityConfig"
@@ -43,6 +47,19 @@ function usePlayPersistence() {
     const yardsGained = formData.get("yardsGained") as string
     const result = formData.get("result") as PlayResult
 
+    // For TD, Interception, or Fumble, reset the form completely
+    if (result.includes("TD") || result === "Interception" || result === "Fumble") {
+      setPreviousPlay({
+        driveNum: "",
+        filmNumber: "",
+        at: "",
+        down: "",
+        distance: "",
+      })
+      return
+    }
+
+    // Continue with the existing logic for other play results
     const atValue = Number.parseInt(at)
     const yardsGainedValue = Number.parseInt(yardsGained)
     const downValue = Number.parseInt(down)
@@ -53,17 +70,10 @@ function usePlayPersistence() {
     let newDown = downValue
     let newDistance = distanceValue
     let newDriveNum = driveNum
-    let newAtPosition = newAt
-    if (result.includes("TD")) {
-      newDown = 1
-      newDistance = 10
-      newDriveNum = (Number.parseInt(driveNum) + 1).toString()
-      newAtPosition = -25
-    } else if (result === "Interception" || result === "Fumble") {
-      newDown = 1
-      newDistance = 10
-      newDriveNum = (Number.parseInt(driveNum) + 1).toString()
-    } else if (result === "Penalty") {
+    const newAtPosition = newAt
+
+    if (result === "Penalty") {
+      // Keep existing logic for penalties
     } else {
       if (yardsGainedValue >= distanceValue) {
         newDown = 1
@@ -169,6 +179,7 @@ export default function LogGamePlayWithAccordion({
   const distanceRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    // Only populate the form fields if previousPlay has values and we're not coming from a TD/INT/Fumble
     if (previousPlay.driveNum && formRef.current) {
       if (driveNumRef.current) driveNumRef.current.value = previousPlay.driveNum
       if (filmNumberRef.current) filmNumberRef.current.value = previousPlay.filmNumber
@@ -178,7 +189,8 @@ export default function LogGamePlayWithAccordion({
     }
   }, [previousPlay, state?.success])
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
+    // Reset all state variables
     setPlayType("")
     setPlayResult("")
     setAudibleOpportunityMissed(false)
@@ -189,35 +201,63 @@ export default function LogGamePlayWithAccordion({
     setSackOnQB(false)
 
     if (formRef.current) {
-      qbComboboxRef.current?.reset()
-      rbComboboxRef.current?.reset()
-      playGroupingComboboxRef.current?.reset()
-      resultComboboxRef.current?.reset()
-      rbVisionExecutionRef.current?.reset()
-      rbRunExecutionRef.current?.reset()
-      pocketPresenceRef.current?.reset()
-      passReadExecutionRef.current?.reset()
-      passBallPlacementRef.current?.reset()
-      scrambleExecutionRef.current?.reset()
-      qbRunExecutionRef.current?.reset()
-      tagsSelectRef.current?.reset()
+      // Reset all combobox refs explicitly
+      const comboboxRefs = [
+        qbComboboxRef,
+        rbComboboxRef,
+        playGroupingComboboxRef,
+        resultComboboxRef,
+        rbVisionExecutionRef,
+        rbRunExecutionRef,
+        pocketPresenceRef,
+        passReadExecutionRef,
+        passBallPlacementRef,
+        scrambleExecutionRef,
+        qbRunExecutionRef,
+      ]
 
-      const elements = Array.from(formRef.current.elements)
-      for (const element of elements) {
-        const input = element as HTMLInputElement
-        if (
-          input.name &&
-          input.name !== "driveNum" &&
-          input.name !== "filmNumber" &&
-          input.name !== "at" &&
-          input.name !== "down" &&
-          input.name !== "distance" &&
-          input.name !== "gameId"
-        ) {
-          input.value = ""
+      // Reset all comboboxes
+      comboboxRefs.forEach((ref) => {
+        if (ref.current) {
+          try {
+            ref.current.reset()
+          } catch (e) {
+            console.error("Error resetting combobox:", e)
+          }
+        }
+      })
+
+      // Reset tag select
+      if (tagsSelectRef.current) {
+        try {
+          tagsSelectRef.current.reset()
+        } catch (e) {
+          console.error("Error resetting tags:", e)
         }
       }
 
+      // Clear form inputs except game ID
+      try {
+        const elements = Array.from(formRef.current.elements)
+        for (const element of elements) {
+          const input = element as HTMLInputElement
+          if (
+            input.name &&
+            input.name !== "gameId" &&
+            input.name !== "driveNum" &&
+            input.name !== "filmNumber" &&
+            input.name !== "at" &&
+            input.name !== "down" &&
+            input.name !== "distance"
+          ) {
+            input.value = ""
+          }
+        }
+      } catch (e) {
+        console.error("Error clearing form inputs:", e)
+      }
+
+      // Re-apply the updated previousPlay values after clearing the form
       if (previousPlay.driveNum) {
         if (driveNumRef.current) driveNumRef.current.value = previousPlay.driveNum
         if (filmNumberRef.current) filmNumberRef.current.value = previousPlay.filmNumber
@@ -226,11 +266,13 @@ export default function LogGamePlayWithAccordion({
         if (distanceRef.current) distanceRef.current.value = previousPlay.distance
       }
     }
-  }
+  }, [previousPlay])
 
-  if (state?.success) {
-    resetForm()
-  }
+  useEffect(() => {
+    if (state?.success) {
+      resetForm()
+    }
+  }, [state?.success, resetForm])
 
   return (
     <Accordion title="Log Play" defaultOpen={false}>
@@ -291,7 +333,7 @@ export default function LogGamePlayWithAccordion({
             </div>
           </div>
           <div className="lg:col-span-2 lg:flex lg:items-center lg:gap-0.5">
-            <div className="w-full">
+            <div>
               <TextInput id="playCall" name="playCall" label="Play Call" placeholder="Sprout" type="text" required />
             </div>
             <div className="w-full">
@@ -301,6 +343,7 @@ export default function LogGamePlayWithAccordion({
           <div className="lg:col-span-2 lg:flex lg:items-center">
             <div className="w-full">
               <ComboboxWKeys
+                key={`play-grouping-${state?.success ? Date.now() : "default"}`}
                 label="Play Grouping"
                 id="playGrouping"
                 name="playGrouping"
@@ -323,6 +366,7 @@ export default function LogGamePlayWithAccordion({
           <div className="lg:col-span-2 lg:flex lg:items-center">
             <div className="w-full">
               <Combobox
+                key={`result-${state?.success ? Date.now() : "default"}`}
                 label="Result"
                 id="result"
                 name="result"
@@ -342,7 +386,7 @@ export default function LogGamePlayWithAccordion({
         <div className="md:grid md:grid-cols-3 md:gap-1 lg:grid lg:grid-cols-12 lg:gap-4 space-y-2 md:space-y-0 mt-4">
           {getVisibleFields(playType as PlayGroupingType, playResult as PlayResult).map((field) => {
             // Convert snake_case from config to camelCase for component matching
-            const camelField = field.replace(/_([a-z])/g, (match, p1) => p1.toUpperCase());
+            const camelField = field.replace(/_([a-z])/g, (match, p1) => p1.toUpperCase())
 
             return (
               <div key={field} className="lg:col-span-2">
@@ -454,11 +498,11 @@ export default function LogGamePlayWithAccordion({
                     ref={scrambleExecutionRef}
                   />
                 )}
-                {camelField === "sackOnQB" && (
-                  <YesNoToggle label="Sack on QB" value={sackOnQB} onChange={setSackOnQB} name="sackOnQB" />
+                {camelField === "sackOnQb" && (
+                  <YesNoToggle label="Sack on QB" value={sackOnQB} onChange={setSackOnQB} name="sackOnQb" />
                 )}
               </div>
-            );
+            )
           })}
         </div>
         <div className="mt-3 mb-1 text-neutral-500 text-xs italic cursor-default">Optional Fields</div>

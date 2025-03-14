@@ -1,5 +1,4 @@
-import { PlayResult } from "./gameTypes";
-import { PlayGroupingType } from "./playGroupingTypes";
+import { PlayGroupingType, PlayResult } from "./gameTypes";
 
 type FieldVisibilityConfig = {
   [playType in PlayGroupingType]?: {

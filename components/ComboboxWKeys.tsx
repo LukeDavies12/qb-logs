@@ -87,20 +87,25 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
           if (selectedOption) {
             setInputValue(selectedOption.label)
           }
+          // Call onChange with the default value
+          onChange?.(defaultValue)
         }, 0)
       } else {
         // When clearing values, we MUST use setTimeout to avoid the React error
         setTimeout(() => {
           setSelectedValue("")
           setInputValue("")
+          // Important: Call onChange with empty string to properly update parent state
+          onChange?.("")
         }, 0)
       }
     },
-  }), [formattedOptions])
+  }), [formattedOptions, onChange])
+
 
   const inputClassName = `mt-1 p-2 block w-full sm:text-sm rounded-md ${error
-      ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
-      : "bg-neutral-100 text-neutral-800 placeholder:text-neutral-400 focus:ring-neutral-500"
+    ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
+    : "bg-neutral-100 text-neutral-800 placeholder:text-neutral-400 focus:ring-neutral-500"
     } focus:outline-none focus:ring-2 focus:border-transparent hover:bg-neutral-50 active:bg-neutral-50 ${className || ""}`
 
   const labelClassName = `block text-xs font-medium ${error ? "text-red-700" : "text-neutral-700"}`

@@ -3,11 +3,10 @@
 import { useState, useMemo, useCallback, useTransition, useEffect } from "react"
 import { ChevronDown, ChevronUp, MoreHorizontal, Filter, X, Trash2 } from "lucide-react"
 import React from "react"
-import { type GameDrive, type GamePlay, playExeuctionLevelsConst } from "@/types/gameTypes"
+import { type GameDrive, type GamePlay, playExeuctionLevelsConst, PlayGrouping } from "@/types/gameTypes"
 import { getReadableFieldName, getVisibleFields } from "@/types/fieldVisibilityConfig"
 import { evaluatePlay } from "@/components/evaluatePlay"
 import ComboBoxFilter from "@/components/ComboboxFilter"
-import type { PlayGrouping } from "@/types/playGroupingTypes"
 import type { TagOption } from "@/components/MultiTagSelect"
 import Dropdown from "@/components/Dropdown"
 import FullScreenModal from "@/components/FullScreenModal"
@@ -330,7 +329,7 @@ export default function GamePlaysTable({
             className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-md"
           >
             <Filter className="w-4 h-4" />
-            Filters
+            Play Chart Filters
             {hasActiveFilters && (
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-neutral-700 text-white rounded-full">
                 {selectedDrives.length + selectedPlayGroupings.length + selectedPlayCalls.length + selectedTags.length}
@@ -473,6 +472,9 @@ export default function GamePlaysTable({
                                       </span>
                                     )
                                   })()}
+                                  {(play.pass_ball_placement === "Best" || play.scramble_execution === "Best" || play.qb_run_execution === "Best") && 
+                                    <span className="border-l-4 pl-1 ml-2 border-purple-500"></span>
+                                  }
                                 </td>
                                 <td className="px-2 py-1 text-sm text-right">{play.film_number}</td>
                                 <td className="px-2 py-1 text-sm text-right">{play.yard_line}</td>

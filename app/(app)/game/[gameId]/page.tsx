@@ -1,8 +1,7 @@
 import { getCurrentSession } from "@/auth/auth"
 import H1 from "@/components/H1"
 import { sql } from "@/db/db"
-import type { Game, GameDrive, GamePlay, PlayPlayGroupingType, PlayTag } from "@/types/gameTypes"
-import type { PlayGrouping } from "@/types/playGroupingTypes"
+import type { Game, GameDrive, GamePlay, PlayGrouping, PlayPlayGroupingType, PlayTag } from "@/types/gameTypes"
 import type { SeasonQB, SeasonRB } from "@/types/seasonType"
 import { redirect } from "next/navigation"
 import type { TagOption } from "@/components/MultiTagSelect"
@@ -10,6 +9,7 @@ import H2 from "@/components/H2"
 import AddDrive from "./AddDrive/AddDrive"
 import LogGamePlay from "./LogPlay/LogGamePlay"
 import GamePlaysTable from "./LogPlay/GamePlaysTable"
+import QBAnalysis from "@/components/QBAnalysis"
 
 export default async function Page({
   params,
@@ -278,18 +278,18 @@ export default async function Page({
     // Create QB and RB objects
     const qbIn = row.qb_id
       ? {
-          id: row.qb_id,
-          name: row.qb_name || "",
-          number: row.qb_number || 0,
-        }
+        id: row.qb_id,
+        name: row.qb_name || "",
+        number: row.qb_number || 0,
+      }
       : null
 
     const rbCarry = row.rb_id
       ? {
-          id: row.rb_id,
-          name: row.rb_name || "",
-          number: row.rb_number || 0,
-        }
+        id: row.rb_id,
+        name: row.rb_name || "",
+        number: row.rb_number || 0,
+      }
       : null
 
     // Get tags for this play from the map
@@ -343,6 +343,23 @@ export default async function Page({
   return (
     <>
       <H1 text={`${game.date.getFullYear()} vs ${game.against}`} />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {seasonQBs.map((qb) => {
+          const qbPlays = game.drives
+            .flatMap(drive => drive.Plays)
+            .filter(play => play.qb_in_id === qb.id);
+
+          if (qbPlays.length === 0) return null;
+
+          return (
+            <QBAnalysis
+              key={qb.id}
+              qb={{ name: qb.name, number: qb.number }}
+              plays={qbPlays}
+            />
+          );
+        })}
+      </div>
       <div className="mt-3">
         <AddDrive gameId={game.id} />
       </div>
