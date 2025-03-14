@@ -22,16 +22,13 @@ export default function CheckboxInput({
   className = '',
   onChange,
 }: CheckboxInputProps) {
-  // Use internal state to manage the checked state
   const [isChecked, setIsChecked] = useState(defaultChecked);
   const [isFocused, setIsFocused] = useState(false);
   
-  // Handle controlled components case if needed
   useEffect(() => {
     setIsChecked(defaultChecked);
   }, [defaultChecked]);
 
-  // Toggle the checkbox state and trigger the onChange handler
   const toggleCheckbox = () => {
     if (disabled) return;
     
@@ -39,7 +36,6 @@ export default function CheckboxInput({
     setIsChecked(newValue);
     
     if (onChange) {
-      // Create a synthetic event
       const syntheticEvent = {
         target: {
           type: 'checkbox',
@@ -61,20 +57,16 @@ export default function CheckboxInput({
     }
   };
 
-  // Handle focus events
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
   
-  // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Toggle checkbox when Enter or Space is pressed
     if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault(); // Prevent default behavior (like form submission)
+      e.preventDefault();
       toggleCheckbox();
     }
   };
 
-  // Checkbox wrapper styling with focus ring styles similar to DefaultButton
   const checkboxWrapperClass = `
     flex items-center justify-center
     h-5 w-5 rounded 
@@ -91,7 +83,6 @@ export default function CheckboxInput({
     ${className}
   `;
 
-  // Label styling
   const labelClass = `
     ml-2 text-sm font-medium
     ${error
@@ -133,12 +124,11 @@ export default function CheckboxInput({
         )}
       </div>
       
-      {/* Label */}
       <label
         htmlFor={id}
         className={labelClass}
         onClick={(e) => {
-          e.preventDefault(); // Prevent default to handle it manually
+          e.preventDefault();
           toggleCheckbox();
         }}
       >

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import SecondaryButton from "@/components/SecondaryButton"
-import { ChevronDown, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { addDriveToGame } from "../gameActions"
 
 export default function AddDrive({ gameId }: { gameId: number }) {

@@ -19,7 +19,7 @@ interface ComboboxProps {
   onChange?: (value: string) => void
   className?: string
   id?: string
-  playGroupings?: any[] // For backward compatibility
+  playGroupings?: any[]
 }
 
 export interface ComboBoxWKeysRef {
@@ -42,7 +42,6 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   }: ComboboxProps,
   ref: React.Ref<ComboBoxWKeysRef>,
 ) {
-  // If playGroupings is provided, convert it to the expected format
   const formattedOptions = playGroupings
     ? playGroupings.map((pg) => ({ label: pg.name, value: pg.id.toString() }))
     : options
@@ -55,7 +54,6 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Set the input value based on the selected option's label
   useEffect(() => {
     if (selectedValue) {
       const selectedOption = formattedOptions.find((opt) => opt.value === selectedValue)
@@ -65,7 +63,6 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
     }
   }, [selectedValue, formattedOptions])
 
-  // Initialize with default selected value
   useEffect(() => {
     if (defaultSelected) {
       setSelectedValue(defaultSelected)
@@ -76,26 +73,21 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
     }
   }, [defaultSelected, formattedOptions])
 
-  // Fix: Use setTimeout to defer state updates to avoid updating during render
   useImperativeHandle(ref, () => ({
     reset: (defaultValue?: string) => {
       if (defaultValue) {
-        // When setting to a specific value, we can use setTimeout to be safe
         setTimeout(() => {
           setSelectedValue(defaultValue)
           const selectedOption = formattedOptions.find((opt) => opt.value === defaultValue)
           if (selectedOption) {
             setInputValue(selectedOption.label)
           }
-          // Call onChange with the default value
           onChange?.(defaultValue)
         }, 0)
       } else {
-        // When clearing values, we MUST use setTimeout to avoid the React error
         setTimeout(() => {
           setSelectedValue("")
           setInputValue("")
-          // Important: Call onChange with empty string to properly update parent state
           onChange?.("")
         }, 0)
       }
@@ -172,7 +164,6 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
       setIsOpen(false)
       setHighlightedIndex(-1)
 
-      // If input doesn't match any option, reset to selected value
       if (selectedValue) {
         const selectedOption = formattedOptions.find((opt) => opt.value === selectedValue)
         if (selectedOption) {

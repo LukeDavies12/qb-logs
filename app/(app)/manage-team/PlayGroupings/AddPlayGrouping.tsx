@@ -6,9 +6,9 @@ import { useState, useEffect, useRef } from "react"
 import ComboBox from "@/components/Combobox"
 import DefaultButton from "@/components/DefaultButton"
 import TextInput from "@/components/TextInput"
-import type { PlayGroupingType } from "@/types/playGroupingTypes"
 import { useActionState, useTransition } from "react"
 import { createPlayGrouping } from "../manageTeamActions"
+import { PlayGroupingType } from "@/types/gameTypes"
 
 export default function AddPlayGrouping() {
   const [formError, setFormError] = useState(false)

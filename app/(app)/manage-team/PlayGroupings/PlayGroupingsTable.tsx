@@ -1,12 +1,12 @@
 "use client"
 
-import type { PlayGrouping } from "@/types/playGroupingTypes"
 import { MoreHorizontal } from "lucide-react"
 import { useState, useCallback } from "react"
 import { useActionState, useTransition } from "react"
 import { deletePlayGrouping } from "@/app/(app)/manage-team/manageTeamActions"
 import Dropdown from "@/components/Dropdown"
 import UpdatePlayGroupingModal from "./UpdatePlayGroupingModal"
+import { PlayGrouping } from "@/types/gameTypes"
 
 export default function PlayGroupingsTable({ playGroupings }: { playGroupings: PlayGrouping[] }) {
   // Sort playGroupings by type in descending order

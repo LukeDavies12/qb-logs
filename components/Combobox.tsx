@@ -32,7 +32,6 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fix for the setState during render issue
   const resetRef = useRef(() => {
     setSelectedValue("")
     setInputValue("")
@@ -40,7 +39,6 @@ const ComboBox = forwardRef(function ComboBox<T extends string>(
 
   useImperativeHandle(ref, () => ({
     reset: () => {
-      // Use setTimeout to defer the state update until after the current render cycle
       setTimeout(() => {
         resetRef.current()
       }, 0)

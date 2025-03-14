@@ -22,13 +22,10 @@ export default function LargeModal({
 }: LargeModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   
-  // Handle keyboard shortcuts for closing
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      // Close on Escape key
       if (e.key === "Escape") onClose()
       
-      // Close on Command+Backspace (Mac)
       if ((e.metaKey) && e.key === "Backspace") onClose()
     }
     
@@ -41,7 +38,6 @@ export default function LargeModal({
     }
   }, [isOpen, onClose])
   
-  // Handle click outside modal
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {

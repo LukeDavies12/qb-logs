@@ -13,7 +13,6 @@ interface TextInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-// Using forwardRef properly handles the ref type
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
     {
@@ -66,7 +65,6 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   }
 )
 
-// Add a display name for debugging purposes
 TextInput.displayName = "TextInput"
 
 export default TextInput

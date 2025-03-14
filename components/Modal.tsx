@@ -16,7 +16,6 @@ interface ModalProps {
 export default function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
 
-  // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -31,7 +30,6 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "ma
     }
   }, [isOpen, onClose])
 
-  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {

@@ -68,7 +68,6 @@ const ComboBoxFilter = forwardRef(function ComboBoxFilter<T extends string>(
     onChange(newValues)
     setInputValue("")
     
-    // Keep focus on input and dropdown open for additional selections
     inputRef.current?.focus()
   }
 
@@ -111,7 +110,6 @@ const ComboBoxFilter = forwardRef(function ComboBoxFilter<T extends string>(
         
       case "Backspace":
         if (inputValue === "" && selectedValues.length > 0) {
-          // Remove the last tag when backspace is pressed with empty input
           handleRemove(selectedValues[selectedValues.length - 1])
         }
         break

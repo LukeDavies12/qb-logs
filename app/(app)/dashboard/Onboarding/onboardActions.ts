@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { PlayGroupingType } from "@/types/playGroupingTypes";
 import { sql } from "@/db/db";
 import { getCurrentSession } from "@/auth/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { PlayGroupingType } from "@/types/gameTypes";
 
 interface PlayGroupingInput {
   name: string;

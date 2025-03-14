@@ -4,12 +4,12 @@ import type React from "react"
 import { useActionState } from "react"
 import { useState } from "react"
 import DefaultButton from "@/components/DefaultButton"
-import type { PlayGroupingType } from "@/types/playGroupingTypes"
 import { XIcon } from "lucide-react"
 import { createPlayGroupings } from "./onboardActions"
 import ComboBox from "@/components/Combobox"
 import TextInput from "@/components/TextInput"
 import SecondaryButton from "@/components/SecondaryButton"
+import { PlayGroupingType } from "@/types/gameTypes"
 
 export default function PlayGroupingsOnboardingForm() {
   const [formError, setFormError] = useState(false)

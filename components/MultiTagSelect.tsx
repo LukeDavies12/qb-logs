@@ -53,26 +53,21 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Initialize filtered options
   useEffect(() => {
     updateFilteredOptions()
   }, [options, selectedTags, inputValue])
 
-  // Update filtered options based on input and already selected tags
   const updateFilteredOptions = () => {
     const selectedIds = selectedTags.map((tag) => tag.id)
 
     let filtered = options.filter(
       (option) =>
-        // Don't show already selected options
         !selectedIds.includes(option.id) &&
-        // Filter by input text
         option.name
           .toLowerCase()
           .includes(inputValue.toLowerCase()),
     )
 
-    // If input has content and doesn't match any existing option, add option to create new tag
     if (
       inputValue.trim() !== "" &&
       !filtered.some((option) => option.name.toLowerCase() === inputValue.toLowerCase())
@@ -112,7 +107,6 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
     setHighlightedIndex(-1)
     onChange?.(newSelectedTags)
 
-    // Keep focus on input for additional selections
     inputRef.current?.focus()
   }
 
@@ -124,7 +118,6 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && inputValue === "" && selectedTags.length > 0) {
-      // Remove the last tag if backspace is pressed and input is empty
       const newSelectedTags = [...selectedTags]
       newSelectedTags.pop()
       setSelectedTags(newSelectedTags)
@@ -169,7 +162,6 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
   }
 
   const handleInputFocus = () => {
-    // Show options immediately on focus, regardless of input value
     setIsOpen(true)
   }
 
@@ -245,7 +237,6 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
         />
       </div>
 
-      {/* Hidden input to store the serialized tag data */}
       <input type="hidden" name={name} value={JSON.stringify(selectedTags)} />
 
       {isOpen && filteredOptions.length > 0 && (

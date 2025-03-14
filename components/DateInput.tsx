@@ -17,8 +17,8 @@ export default function DateInput({
   error?: boolean;
   defaultValue?: string;
   className?: string;
-  min?: string; // Format: YYYY-MM-DD
-  max?: string; // Format: YYYY-MM-DD
+  min?: string;
+  max?: string;
   onChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue || '');
@@ -47,14 +47,11 @@ export default function DateInput({
     }
   };
 
-  // Format the date as a readable string for display (e.g., Jan 15, 2023)
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     try {
-      // Fix for timezone issue - parse the date parts directly
       const [year, month, day] = dateString.split('-').map(part => parseInt(part, 10));
       
-      // Create a date using local timezone (months are 0-indexed in JS)
       const date = new Date(year, month - 1, day);
       
       return date.toLocaleDateString('en-US', {

@@ -171,15 +171,12 @@ export default function GamePlaysTable({
         }
 
         if (selectedTags.length > 0) {
-          // If the play has no tags or the tags array is empty, filter it out
           if (!play.tags || play.tags.length === 0) {
             return false
           }
 
-          // Get all tag names from the play
           const playTagNames = play.tags.map((tag) => tag.name)
 
-          // Check if any selected tag exists in the play's tags
           const hasMatchingTag = selectedTags.some((selectedTag) => playTagNames.includes(selectedTag))
 
           if (!hasMatchingTag) {

@@ -25,11 +25,8 @@ export interface GamePlay {
   distance: number;
   play_grouping_id: number;
   play_grouping_type: PlayPlayGroupingType | null;
-  
-  // Add these two new properties
   qb_in: { id: number; name: string; number: number } | null;
   rb_carry: { id: number; name: string; number: number } | null;
-  
   play_call: string;
   play_call_tags: string | null;
   yards_gained: number;

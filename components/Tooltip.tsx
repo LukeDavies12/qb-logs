@@ -15,7 +15,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  // Position classes mapping
   const positionClasses = {
     top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
     right: "left-full top-1/2 -translate-y-1/2 ml-2",
@@ -38,7 +37,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
           className={`absolute z-20 px-2 py-1 text-xs font-medium text-white bg-neutral-800 rounded-md whitespace-nowrap ${positionClasses[position]}`}
         >
           {text}
-          {/* Arrow */}
           {position === "right" && (
             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 border-4 border-transparent border-r-neutral-800"></div>
           )}

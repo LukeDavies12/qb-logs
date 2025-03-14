@@ -32,7 +32,6 @@ export default function Dropdown({
   const toggleDropdown = () => setIsOpen(!isOpen)
   const closeDropdown = useCallback(() => setIsOpen(false), [])
   
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
