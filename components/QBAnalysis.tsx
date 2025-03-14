@@ -9,7 +9,6 @@ type QB = {
   number: number
 }
 
-// Utility functions
 function calculateExecutionPercentage(executed: number, total: number): string {
   if (total === 0) return "0.0"
   return ((executed / total) * 100).toFixed(1)
@@ -27,7 +26,6 @@ function isNo(value: boolean | null): boolean {
   return value === false
 }
 
-// StatCard component for displaying individual statistics
 type StatCardProps = {
   title: string
   value: string | number
@@ -52,7 +50,6 @@ function StatCard({ title, value, subtitle, className = "", isSummary = false }:
   )
 }
 
-// QBHeader component for the quarterback's name and stats
 function QBHeader({ qb, plays }: { qb: QB; plays: GamePlay[] }) {
   const involvedPlaysCount = plays.filter((play) => evaluatePlay(play)?.involved === true).length
 
@@ -106,7 +103,6 @@ function SummaryStats({ plays }: { plays: GamePlay[] }) {
   )
 }
 
-// DetailedStats component for the detailed metrics
 function DetailedStats({ plays }: { plays: GamePlay[] }) {
   const passPlays = plays.filter((play) =>
     (play.result === "Complete" || play.result === "Incomplete" || play.result === "Interception" || play.result === "Complete TD") &&
@@ -132,13 +128,12 @@ function DetailedStats({ plays }: { plays: GamePlay[] }) {
       <StatCard title="Scrambles/ Runs" value={`${calculateExecutionPercentage(goodScramblesAndRuns.length, scrambeledOrRan.length)}%`} subtitle={`${goodScramblesAndRuns.length} / ${scrambeledOrRan.length}`} />
       <StatCard title="RPO/Option Reads" value={`${calculateExecutionPercentage(yesRPOAndOptionReads.length, rposAndReadOptions.length)}%`} subtitle={`${yesRPOAndOptionReads.length} / ${rposAndReadOptions.length}`} />
       <StatCard title="Pocket Presence" value={`${calculateExecutionPercentage(pocketPresence.length, typeOfPass.length)}%`} subtitle={`${pocketPresence.length} / ${typeOfPass.length}`} />
-      <StatCard title="Sacked on QB" value={`${calculateExecutionPercentage(sackedOnQB.length, sacked.length)}%`} subtitle={`${sackedOnQB.length} / ${sacked.length}`} />
+      <StatCard title="Sack on QB" value={`${calculateExecutionPercentage(sackedOnQB.length, sacked.length)}%`} subtitle={`${sackedOnQB.length} / ${sacked.length}`} />
     </div>
     </div>
   )
 }
 
-// Main QBAnalysis component that composes all the other components
 export default function QBAnalysis({ qb, plays }: { qb: QB; plays: GamePlay[] }) {
   return (
     <div className="rounded-lg border px-4 py-1 flex flex-col bg-white">
