@@ -308,7 +308,6 @@ export default async function Page({
       distance: row.distance,
       play_grouping_id: row.play_grouping_id,
       play_grouping_type: playGroupingType,
-      // Add QB and RB objects to play
       qb_in: qbIn,
       rb_carry: rbCarry,
       play_call: row.play_call,
