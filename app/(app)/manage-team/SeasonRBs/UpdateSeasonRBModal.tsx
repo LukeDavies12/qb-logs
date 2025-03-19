@@ -52,7 +52,6 @@ export default function UpdateSeasonRBModal({
     "Redshirt Junior",
     "Senior",
     "Redshirt Senior",
-    "Graduate",
   ]
   // Reset form when modal opens with new seasonRB
   useEffect(() => {
