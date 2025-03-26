@@ -62,15 +62,15 @@ export default function LargeModal({
         className="bg-white rounded-lg w-[96%] h-[94%] flex flex-col"
         ref={modalRef}
       >
-        <div className="flex justify-between items-center px-6 py-2 border-b border-neutral-100">
+        <div className="flex justify-between items-center px-6 py-2">
           <H2 text={title} />
           {showCloseButton && (
             <button 
               onClick={onClose} 
-              className="p-2 rounded-full hover:bg-neutral-100"
+              className="p-2 rounded-full hover:bg-red-50 hover:text-red-700 text-neutral-600"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5 text-neutral-500" />
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>

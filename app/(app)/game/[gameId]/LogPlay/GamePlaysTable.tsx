@@ -428,16 +428,16 @@ export default function GamePlaysTable({
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="border-b border-neutral-100">
-                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500">QB</th>
-                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500">Grade</th>
-                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500">Hudl #</th>
-                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500">At</th>
-                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500">Dn</th>
-                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500">Dist</th>
-                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500">Call</th>
-                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500">Grouping</th>
-                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500">Result</th>
-                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500">Yds</th>
+                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">QB</th>
+                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Grade</th>
+                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Hudl #</th>
+                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">At</th>
+                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Dn</th>
+                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Dist</th>
+                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Call</th>
+                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Play Grouping</th>
+                            <th className="text-left px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Result</th>
+                            <th className="text-right px-2 py-1 text-sm font-medium text-neutral-500 border-r border-neutral-100">Yds</th>
                             <th className="w-16"></th>
                           </tr>
                         </thead>
@@ -449,8 +449,8 @@ export default function GamePlaysTable({
                                 onMouseEnter={() => setHoveredItem(play.id)}
                                 onMouseLeave={() => setHoveredItem(null)}
                               >
-                                <td className="px-2 py-1 text-sm">#{play.qb_in?.number}</td>
-                                <td className="px-2 py-1">
+                                <td className="px-2 py-1 text-sm border-r border-neutral-100">#{play.qb_in?.number}</td>
+                                <td className="px-2 py-1 border-r border-neutral-100">
                                   {(() => {
                                     const evaluation = evaluatePlay(play)
                                     if (!evaluation) return <span className="text-sm text-neutral-400">...</span>
@@ -469,17 +469,17 @@ export default function GamePlaysTable({
                                       </span>
                                     )
                                   })()}
-                                  {(play.pass_ball_placement === "Best" || play.scramble_execution === "Best" || play.qb_run_execution === "Best") && 
-                                    <span className="border-l-4 pl-1 ml-2 border-purple-500"></span>
+                                  {(play.pass_ball_placement === "Best" || play.scramble_execution === "Best" || play.qb_run_execution === "Best") &&
+                                    <span className="border-r-4 pr-1 mr-2 border-purple-500"></span>
                                   }
                                 </td>
-                                <td className="px-2 py-1 text-sm text-right">{play.film_number}</td>
-                                <td className="px-2 py-1 text-sm text-right">{play.yard_line}</td>
-                                <td className="px-2 py-1 text-sm text-right">{play.down}</td>
-                                <td className="px-2 py-1 text-sm text-right">{play.distance}</td>
-                                <td className="px-2 py-1 text-sm">{play.play_call}</td>
-                                <td className="px-2 py-1 text-sm">{play.play_grouping_type?.name}</td>
-                                <td className="px-2 py-1">
+                                <td className="px-2 py-1 text-sm text-right border-r border-neutral-100">{play.film_number}</td>
+                                <td className="px-2 py-1 text-sm text-right border-r border-neutral-100">{play.yard_line}</td>
+                                <td className="px-2 py-1 text-sm text-right border-r border-neutral-100">{play.down}</td>
+                                <td className="px-2 py-1 text-sm text-right border-r border-neutral-100">{play.distance}</td>
+                                <td className="px-2 py-1 text-sm border-r border-neutral-100">{play.play_call}</td>
+                                <td className="px-2 py-1 text-sm border-r border-neutral-100">{play.play_grouping_type?.name}</td>
+                                <td className="px-2 py-1 border-r border-neutral-100">
                                   <span
                                     className={`text-sm px-1.5 py-0.5 ${String(play.result).includes("TD") ? "bg-blue-100 text-blue-700" : ""
                                       }`}
@@ -487,7 +487,7 @@ export default function GamePlaysTable({
                                     {play.result}
                                   </span>
                                 </td>
-                                <td className="px-2 py-1 text-right">
+                                <td className="px-2 py-1 text-right border-r border-neutral-100">
                                   <span
                                     className={`text-sm px-1.5 py-0.5 ${play.yards_gained <= 0
                                       ? "bg-red-50 text-red-700"
@@ -577,7 +577,7 @@ export default function GamePlaysTable({
                                                     </span>
                                                   ) : (
                                                     <span
-                                                      className={`border-l-4 pl-1 ml-1 ${(play as any)[field] === "Best"
+                                                      className={`border-r-4 pr-1 mr-1 ${(play as any)[field] === "Best"
                                                         ? "border-purple-500"
                                                         : (play as any)[field] === "Good"
                                                           ? "border-green-700"

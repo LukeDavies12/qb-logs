@@ -19,10 +19,8 @@ export default async function Page({
   const gameId = Number((await params).gameId)
   if (!gameId) redirect("/dashboard")
 
-  // Get session user data
   const { user } = await getCurrentSession()
 
-  // Get all required data in a single query
   const gameInfoQuery = await sql`
     SELECT 
       g.id,
@@ -260,7 +258,6 @@ export default async function Page({
 
   // Process plays data
   playsData.forEach((row) => {
-    // Add play call to unique set if it exists
     if (row.play_call) {
       uniquePlayCalls.add(row.play_call)
     }
@@ -275,7 +272,6 @@ export default async function Page({
       }
     }
 
-    // Create QB and RB objects
     const qbIn = row.qb_id
       ? {
         id: row.qb_id,
@@ -292,11 +288,10 @@ export default async function Page({
       }
       : null
 
-    // Get tags for this play from the map
     const playTags = playTagsMap[row.id] || []
 
     const play: GamePlay = {
-      tags: playTags, // Add the tags from our map
+      tags: playTags,
       id: row.id,
       drive_id: row.drive_id,
       drive_number_in_game: row.drive_number_in_game,
@@ -336,7 +331,6 @@ export default async function Page({
     }
   })
 
-  // Filter out tags with null IDs
   const validTags = tags.filter((tag) => tag.id !== null)
 
   return (

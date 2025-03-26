@@ -47,7 +47,6 @@ function usePlayPersistence() {
     const yardsGained = formData.get("yardsGained") as string
     const result = formData.get("result") as PlayResult
 
-    // For TD, Interception, or Fumble, reset the form completely
     if (result.includes("TD") || result === "Interception" || result === "Fumble") {
       setPreviousPlay({
         driveNum: "",
@@ -59,7 +58,6 @@ function usePlayPersistence() {
       return
     }
 
-    // Continue with the existing logic for other play results
     const atValue = Number.parseInt(at)
     const yardsGainedValue = Number.parseInt(yardsGained)
     const downValue = Number.parseInt(down)
@@ -73,7 +71,7 @@ function usePlayPersistence() {
     const newAtPosition = newAt
 
     if (result === "Penalty") {
-      // Keep existing logic for penalties
+      // MAY CHANGE
     } else {
       if (yardsGainedValue >= distanceValue) {
         newDown = 1
@@ -201,7 +199,6 @@ export default function LogGamePlayWithAccordion({
     setSackOnQB(false)
 
     if (formRef.current) {
-      // Reset all combobox refs explicitly
       const comboboxRefs = [
         qbComboboxRef,
         rbComboboxRef,
@@ -216,7 +213,6 @@ export default function LogGamePlayWithAccordion({
         qbRunExecutionRef,
       ]
 
-      // Reset all comboboxes
       comboboxRefs.forEach((ref) => {
         if (ref.current) {
           try {
@@ -227,7 +223,6 @@ export default function LogGamePlayWithAccordion({
         }
       })
 
-      // Reset tag select
       if (tagsSelectRef.current) {
         try {
           tagsSelectRef.current.reset()
@@ -236,7 +231,6 @@ export default function LogGamePlayWithAccordion({
         }
       }
 
-      // Clear form inputs except game ID
       try {
         const elements = Array.from(formRef.current.elements)
         for (const element of elements) {
@@ -257,7 +251,6 @@ export default function LogGamePlayWithAccordion({
         console.error("Error clearing form inputs:", e)
       }
 
-      // Re-apply the updated previousPlay values after clearing the form
       if (previousPlay.driveNum) {
         if (driveNumRef.current) driveNumRef.current.value = previousPlay.driveNum
         if (filmNumberRef.current) filmNumberRef.current.value = previousPlay.filmNumber

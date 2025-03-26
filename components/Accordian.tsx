@@ -31,7 +31,7 @@ export default function Accordion({
       <button
         type="button"
         onClick={toggleAccordion}
-        className={`w-full flex justify-between items-center py-2 px-4 text-neutral-700 bg-neutral-100 text-sm font-medium ${titleClassName}`}
+        className={`w-full flex justify-between items-center py-2 px-4 text-neutral-950 bg-neutral-100 text-sm font-medium ${titleClassName}`}
         aria-expanded={isOpen}
       >
         <span className="font-bold">{title}</span>

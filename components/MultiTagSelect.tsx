@@ -61,11 +61,7 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
     const selectedIds = selectedTags.map((tag) => tag.id)
 
     let filtered = options.filter(
-      (option) =>
-        !selectedIds.includes(option.id) &&
-        option.name
-          .toLowerCase()
-          .includes(inputValue.toLowerCase()),
+      (option) => !selectedIds.includes(option.id) && option.name.toLowerCase().includes(inputValue.toLowerCase()),
     )
 
     if (
@@ -190,6 +186,7 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
     if (highlightedIndex >= 0 && optionsRef.current[highlightedIndex]) {
       optionsRef.current[highlightedIndex].scrollIntoView({
         block: "nearest",
+        behavior: "smooth",
       })
     }
   }, [highlightedIndex])
@@ -241,11 +238,11 @@ const MultiTagSelect = forwardRef(function MultiTagSelect(
 
       {isOpen && filteredOptions.length > 0 && (
         <div
-          className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-neutral-200"
+          className="absolute z-20 w-full mt-1 bg-white rounded-md shadow-lg border border-neutral-200"
           id="tag-options-list"
           role="listbox"
         >
-          <ul className="py-1 max-h-60 overflow-auto">
+          <ul className="py-1 max-h-48 overflow-y-auto">
             {filteredOptions.map((option, index) => (
               <li
                 key={`${option.id || "new"}-${option.name}-${index}`}

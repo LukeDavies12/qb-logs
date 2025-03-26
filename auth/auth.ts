@@ -35,10 +35,9 @@ export async function invalidateSession(sessionId: string): Promise<void> {
   `;
 }
 
-export async function validateSessionToken( token: string): Promise<SessionValidationResult> {
+export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
-  // Retrieve session and user data
   const result = await sql`
     SELECT 
       s.id as session_id,
