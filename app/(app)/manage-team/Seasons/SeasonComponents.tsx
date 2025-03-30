@@ -225,287 +225,289 @@ export function AddSeason() {
 
   return (
     <div className="mb-2">
-      <form key={formKey} ref={formRef} onSubmit={handleAddSeason} className="space-y-2">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <div className="md:col-span-6">
-            <TextInput
-              label="Year"
-              name="year"
-              id="year"
-              type="number"
-              defaultValue={new Date().getFullYear().toString()}
-              placeholder="Enter year"
-              required
-              error={formError}
-            />
+      <Accordian title="New Season" contentClassName="p-2">
+        <form key={formKey} ref={formRef} onSubmit={handleAddSeason} className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-6">
+              <TextInput
+                label="Year"
+                name="year"
+                id="year"
+                type="number"
+                defaultValue={new Date().getFullYear().toString()}
+                placeholder="Enter year"
+                required
+                error={formError}
+              />
+            </div>
+            <div className="md:col-span-6">
+              <ComboBox label="Season Type" name="type" id="type" options={seasonTypes} required error={formError} />
+            </div>
           </div>
-          <div className="md:col-span-6">
-            <ComboBox label="Season Type" name="type" id="type" options={seasonTypes} required error={formError} />
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <h3 className="text-xs cursor-default">Quarterbacks</h3>
-            {isLoading ? (
-              <div className="p-4 border rounded-md bg-neutral-50">
-                <p className="text-sm text-gray-500">Loading previous players...</p>
-              </div>
-            ) : (
-              <>
-                {previousPlayers.qbs.length > 0 && (
-                  <Accordian
-                    title={`Previous Season QBs`}
-                    titleClassName="text-sm font-medium"
-                    contentClassName="p-3"
-                  >
-                    <div className="space-y-2 mt-2">
-                      {previousPlayers.qbs.map((qb) => (
-                        <div
-                          key={qb.id}
-                          className="flex items-center justify-between p-3 border rounded-md hover:bg-neutral-50"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <h3 className="text-xs cursor-default">Quarterbacks</h3>
+              {isLoading ? (
+                <div className="p-4 border rounded-md bg-neutral-50">
+                  <p className="text-sm text-gray-500">Loading previous players...</p>
+                </div>
+              ) : (
+                <>
+                  {previousPlayers.qbs.length > 0 && (
+                    <Accordian
+                      title={`Previous Season QBs`}
+                      titleClassName="text-sm font-medium"
+                      contentClassName="p-3"
+                    >
+                      <div className="space-y-2 mt-2">
+                        {previousPlayers.qbs.map((qb) => (
+                          <div
+                            key={qb.id}
+                            className="flex items-center justify-between p-3 border rounded-md hover:bg-neutral-50"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <CheckboxInput
+                                id={`qb-${qb.id}`}
+                                name={`qb-${qb.id}`}
+                                label=""
+                                defaultChecked={selectedQBs.has(qb.id)}
+                                onChange={() => toggleQB(qb.id)}
+                              />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {qb.name} <span className="text-gray-500">#{qb.number}</span>
+                                </p>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-500">{qb.year}</span>
+                                  <span className="text-xs text-gray-500">→</span>
+                                  <span className="text-xs font-semibold text-neutral-900">{getNextYear(qb.year)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Accordian>
+                  )}
+                  <div className="border rounded-md p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium">New QBs</h4>
+                      {!isAddingQB && (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingQB(true)}
+                          className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
                         >
-                          <div className="flex items-center space-x-3">
-                            <CheckboxInput
-                              id={`qb-${qb.id}`}
-                              name={`qb-${qb.id}`}
-                              label=""
-                              defaultChecked={selectedQBs.has(qb.id)}
-                              onChange={() => toggleQB(qb.id)}
-                            />
+                          Add QB
+                        </button>
+                      )}
+                    </div>
+                    {isAddingQB && (
+                      <div className="space-y-3 rounded-md">
+                        <div className="grid grid-cols-2 gap-3">
+                          <TextInput
+                            label="Name"
+                            defaultValue={newQBName}
+                            onChange={(e) => setNewQBName(e.target.value)}
+                            placeholder="QB Name"
+                            name=""
+                          />
+                          <TextInput
+                            label="Number"
+                            defaultValue={newQBNumber}
+                            onChange={(e) => setNewQBNumber(e.target.value)}
+                            type="number"
+                            placeholder="#"
+                            name=""
+                          />
+                        </div>
+                        <ComboBox
+                          label="Year"
+                          name="qb-year"
+                          id="qb-year"
+                          options={playerYears}
+                          value={newQBYear}
+                          onChange={(value) => setNewQBYear(value)}
+                          required={false}
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingQB(false)}
+                            className="text-xs px-2 py-1 border rounded-md"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddNewQB}
+                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
+                            disabled={!newQBName || !newQBNumber}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {newQBs.length > 0 && (
+                      <div className="space-y-2 mt-2">
+                        {newQBs.map((qb, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                             <div>
                               <p className="text-sm font-medium">
                                 {qb.name} <span className="text-gray-500">#{qb.number}</span>
                               </p>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs text-gray-500">{qb.year}</span>
-                                <span className="text-xs text-gray-500">→</span>
-                                <span className="text-xs font-semibold text-neutral-900">{getNextYear(qb.year)}</span>
+                              <span className="text-xs text-gray-500">{qb.year}</span>
+                            </div>
+                            <button type="button" onClick={() => removeNewQB(index)} className="text-xs text-red-500">
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!isAddingQB && newQBs.length === 0 && <p className="text-xs text-gray-500">No new QBs added</p>}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xs cursor-default">Running Backs</h3>
+              {isLoading ? (
+                <div className="p-4 border rounded-md bg-gray-50">
+                  <p className="text-sm text-gray-500">Loading previous players...</p>
+                </div>
+              ) : (
+                <>
+                  {previousPlayers.rbs.length > 0 && (
+                    <Accordian
+                      title={`Previous Season RBs`}
+                      titleClassName="text-sm font-medium"
+                      contentClassName="p-3"
+                    >
+                      <div className="space-y-2 mt-2">
+                        {previousPlayers.rbs.map((rb) => (
+                          <div
+                            key={rb.id}
+                            className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <CheckboxInput
+                                id={`rb-${rb.id}`}
+                                name={`rb-${rb.id}`}
+                                label=""
+                                defaultChecked={selectedRBs.has(rb.id)}
+                                onChange={() => toggleRB(rb.id)}
+                              />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {rb.name} <span className="text-gray-500">#{rb.number}</span>
+                                </p>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-500">{rb.year}</span>
+                                  <span className="text-xs text-gray-500">→</span>
+                                  <span className="text-xs text-neutral-900 font-semibold">{getNextYear(rb.year)}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Accordian>
-                )}
-                <div className="border rounded-md p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">New QBs</h4>
-                    {!isAddingQB && (
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingQB(true)}
-                        className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
-                      >
-                        Add QB
-                      </button>
-                    )}
-                  </div>
-                  {isAddingQB && (
-                    <div className="space-y-3 rounded-md">
-                      <div className="grid grid-cols-2 gap-3">
-                        <TextInput
-                          label="Name"
-                          defaultValue={newQBName}
-                          onChange={(e) => setNewQBName(e.target.value)}
-                          placeholder="QB Name"
-                          name=""
-                        />
-                        <TextInput
-                          label="Number"
-                          defaultValue={newQBNumber}
-                          onChange={(e) => setNewQBNumber(e.target.value)}
-                          type="number"
-                          placeholder="#"
-                          name=""
-                        />
+                        ))}
                       </div>
-                      <ComboBox
-                        label="Year"
-                        name="qb-year"
-                        id="qb-year"
-                        options={playerYears}
-                        value={newQBYear}
-                        onChange={(value) => setNewQBYear(value)}
-                        required={false}
-                      />
-                      <div className="flex justify-end space-x-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsAddingQB(false)}
-                          className="text-xs px-2 py-1 border rounded-md"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAddNewQB}
-                          className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
-                          disabled={!newQBName || !newQBNumber}
-                        >
-                          Add
-                        </button>
-                      </div>
-                    </div>
+                    </Accordian>
                   )}
-                  {newQBs.length > 0 && (
-                    <div className="space-y-2 mt-2">
-                      {newQBs.map((qb, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-md">
-                          <div>
-                            <p className="text-sm font-medium">
-                              {qb.name} <span className="text-gray-500">#{qb.number}</span>
-                            </p>
-                            <span className="text-xs text-gray-500">{qb.year}</span>
-                          </div>
-                          <button type="button" onClick={() => removeNewQB(index)} className="text-xs text-red-500">
-                            Remove
+                  <div className="border rounded-md p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium">New RBs</h4>
+                      {!isAddingRB && (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingRB(true)}
+                          className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
+                        >
+                          Add RB
+                        </button>
+                      )}
+                    </div>
+                    {isAddingRB && (
+                      <div className="space-y-3 rounded-md">
+                        <div className="grid grid-cols-2 gap-3">
+                          <TextInput
+                            label="Name"
+                            defaultValue={newRBName}
+                            name=""
+                            onChange={(e) => setNewRBName(e.target.value)}
+                            placeholder="RB Name"
+                          />
+                          <TextInput
+                            label="Number"
+                            defaultValue={newRBNumber}
+                            name=""
+                            onChange={(e) => setNewRBNumber(e.target.value)}
+                            type="number"
+                            placeholder="#"
+                          />
+                        </div>
+                        <ComboBox
+                          label="Year"
+                          name="rb-year"
+                          id="rb-year"
+                          options={playerYears}
+                          value={newRBYear}
+                          onChange={(value) => setNewRBYear(value)}
+                          required={false}
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingRB(false)}
+                            className="text-xs px-2 py-1 border rounded-md"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAddNewRB}
+                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
+                            disabled={!newRBName || !newRBNumber}
+                          >
+                            Add
                           </button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {!isAddingQB && newQBs.length === 0 && <p className="text-xs text-gray-500">No new QBs added</p>}
-                </div>
-              </>
-            )}
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-xs cursor-default">Running Backs</h3>
-            {isLoading ? (
-              <div className="p-4 border rounded-md bg-gray-50">
-                <p className="text-sm text-gray-500">Loading previous players...</p>
-              </div>
-            ) : (
-              <>
-                {previousPlayers.rbs.length > 0 && (
-                  <Accordian
-                    title={`Previous Season RBs`}
-                    titleClassName="text-sm font-medium"
-                    contentClassName="p-3"
-                  >
-                    <div className="space-y-2 mt-2">
-                      {previousPlayers.rbs.map((rb) => (
-                        <div
-                          key={rb.id}
-                          className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <CheckboxInput
-                              id={`rb-${rb.id}`}
-                              name={`rb-${rb.id}`}
-                              label=""
-                              defaultChecked={selectedRBs.has(rb.id)}
-                              onChange={() => toggleRB(rb.id)}
-                            />
+                      </div>
+                    )}
+                    {newRBs.length > 0 && (
+                      <div className="space-y-2 mt-2">
+                        {newRBs.map((rb, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                             <div>
                               <p className="text-sm font-medium">
                                 {rb.name} <span className="text-gray-500">#{rb.number}</span>
                               </p>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs text-gray-500">{rb.year}</span>
-                                <span className="text-xs text-gray-500">→</span>
-                                <span className="text-xs text-neutral-900 font-semibold">{getNextYear(rb.year)}</span>
-                              </div>
+                              <span className="text-xs text-gray-500">{rb.year}</span>
                             </div>
+                            <button type="button" onClick={() => removeNewRB(index)} className="text-xs text-red-500">
+                              Remove
+                            </button>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Accordian>
-                )}
-                <div className="border rounded-md p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">New RBs</h4>
-                    {!isAddingRB && (
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingRB(true)}
-                        className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
-                      >
-                        Add RB
-                      </button>
+                        ))}
+                      </div>
                     )}
+                    {!isAddingRB && newRBs.length === 0 && <p className="text-xs text-gray-500">No new RBs added</p>}
                   </div>
-                  {isAddingRB && (
-                    <div className="space-y-3 rounded-md">
-                      <div className="grid grid-cols-2 gap-3">
-                        <TextInput
-                          label="Name"
-                          defaultValue={newRBName}
-                          name=""
-                          onChange={(e) => setNewRBName(e.target.value)}
-                          placeholder="RB Name"
-                        />
-                        <TextInput
-                          label="Number"
-                          defaultValue={newRBNumber}
-                          name=""
-                          onChange={(e) => setNewRBNumber(e.target.value)}
-                          type="number"
-                          placeholder="#"
-                        />
-                      </div>
-                      <ComboBox
-                        label="Year"
-                        name="rb-year"
-                        id="rb-year"
-                        options={playerYears}
-                        value={newRBYear}
-                        onChange={(value) => setNewRBYear(value)}
-                        required={false}
-                      />
-                      <div className="flex justify-end space-x-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsAddingRB(false)}
-                          className="text-xs px-2 py-1 border rounded-md"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAddNewRB}
-                          className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded-md"
-                          disabled={!newRBName || !newRBNumber}
-                        >
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {newRBs.length > 0 && (
-                    <div className="space-y-2 mt-2">
-                      {newRBs.map((rb, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-md">
-                          <div>
-                            <p className="text-sm font-medium">
-                              {rb.name} <span className="text-gray-500">#{rb.number}</span>
-                            </p>
-                            <span className="text-xs text-gray-500">{rb.year}</span>
-                          </div>
-                          <button type="button" onClick={() => removeNewRB(index)} className="text-xs text-red-500">
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {!isAddingRB && newRBs.length === 0 && <p className="text-xs text-gray-500">No new RBs added</p>}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-        <DefaultButton
-          type="submit"
-          text={isPending ? "Creating..." : "Create Season"}
-          className="w-full h-9"
-          disabled={isPending || isLoading}
-        />
-        {formError && <p className="text-sm text-red-600 mt-1">Please fill out all required fields.</p>}
-      </form>
+          <DefaultButton
+            type="submit"
+            text={isPending ? "Creating..." : "Create Season"}
+            className="w-full h-9"
+            disabled={isPending || isLoading}
+          />
+          {formError && <p className="text-sm text-red-600 mt-1">Please fill out all required fields.</p>}
+        </form>
+      </Accordian>
     </div>
   )
 }
