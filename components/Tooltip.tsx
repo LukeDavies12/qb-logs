@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState, ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 
 interface TooltipProps {
   children: ReactNode;
@@ -14,16 +13,16 @@ export const Tooltip: React.FC<TooltipProps> = ({
   position = "right",
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-
+  
   const positionClasses = {
     top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
     right: "left-full top-1/2 -translate-y-1/2 ml-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+    bottom: "top-full left-0 mt-1", // Changed to left-0 and reduced margin-top
     left: "right-full top-1/2 -translate-y-1/2 mr-2",
   };
-
+  
   return (
-    <div className={`relative inline-block ${position === "right" ? "ml-1" : ""}`}>
+    <div className={`relative cursor-pointer inline-block ${position === "right" ? "ml-1" : ""}`}>
       <div
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
@@ -31,7 +30,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
       >
         {children}
       </div>
-      
       {isVisible && (
         <div
           className={`absolute z-20 px-2 py-1 text-xs font-medium text-white bg-neutral-800 rounded-md whitespace-nowrap ${positionClasses[position]}`}
@@ -47,7 +45,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1 border-4 border-transparent border-t-neutral-800"></div>
           )}
           {position === "bottom" && (
-            <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1 border-4 border-transparent border-b-neutral-800"></div>
+            <div className="absolute left-4 -top-3 translate-y-1 border-4 border-transparent border-b-neutral-800"></div>
           )}
         </div>
       )}

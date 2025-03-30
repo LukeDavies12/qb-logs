@@ -36,7 +36,7 @@ function isOnSchedulePlay(play: GamePlay): boolean {
     if (distance <= 12) {
       return yardsGained >= distance
     } else {
-      return yardsGained >= 4
+      return yardsGained >= 6
     }
   }
   return false
@@ -120,7 +120,6 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
 
   return (
     <div className="rounded-lg border bg-white p-3">
-      {/* Header - QB info and play count */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-bold text-neutral-900">{qb.name}</h2>
@@ -130,10 +129,8 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
           {involvedPlaysCount} / {plays.length} plays involved
         </p>
       </div>
-
-      {/* Main stats grid */}
       <div className="relative mb-2">
-        <div className="absolute left-0 top-0 w-1 h-full bg-neutral-700"></div>
+        <div className="absolute left-0 top-0 w-2 h-full bg-neutral-700"></div>
         <div className="pl-3 grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="bg-neutral-50 rounded border border-neutral-100 p-2">
             <h3 className="text-xs text-neutral-700 font-semibold truncate">Grade Summary</h3>
@@ -144,25 +141,22 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
               </span>
             </div>
           </div>
-
           <div className="bg-neutral-50 rounded border border-neutral-100 p-2">
-            <h3 className="text-xs text-neutral-700 font-semibold truncate">10+ Yd plays</h3>
+            <h3 className="text-xs text-neutral-700 font-semibold truncate">10+ Yd plays created</h3>
             <div className="text-2xl font-bold mt-1">{bigPlaysCount}</div>
           </div>
-
           <div className="bg-neutral-50 rounded border border-neutral-100 p-2">
             <h3 className="text-xs text-neutral-700 font-semibold truncate">Great Throws/Runs</h3>
             <div className="text-2xl font-bold mt-1">{greatPlaysCount}</div>
           </div>
-
           <div className="bg-neutral-50 rounded border border-neutral-100 p-2">
             <div className="flex items-center gap-1 group relative">
-              <h3 className="text-xs text-neutral-700 font-semibold truncate">On Schedule</h3>
+              <h3 className="text-xs text-neutral-700 font-semibold truncate">On Schedule %</h3>
               <div className="relative">
                 <Info size={14} className="text-neutral-500 cursor-help" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-neutral-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-10">
-                  % of plays meeting yardage goals: 5+ yds on 1st/2nd down, conversions on 3rd/4th when &le;12 yds
-                  needed, or 5+ yds when &gt;12 yds needed.
+                  % of plays meeting yardage goals: 4+ yds on 1st/2nd down, conversions on 3rd/4th when &le;12 yds
+                  needed, or 6+ yds when &gt;12 yds needed.
                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-neutral-800"></div>
                 </div>
               </div>
@@ -176,12 +170,17 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
           </div>
         </div>
       </div>
-
-      {/* Area Grades */}
       <h3 className="font-bold text-sm text-neutral-800 mb-1">Area Grades</h3>
       <div className="grid grid-cols-3 md:grid-cols-6 gap-x-3 gap-y-2 mb-2">
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">Pass Reads</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>Pass Reads</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                Pass Reads
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(goodPassReads.length, passPlays.length)}%
@@ -191,9 +190,15 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </span>
           </div>
         </div>
-
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">Ball Placement</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>Ball Placement</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                Ball Placement
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(goodBallPlacement.length, thrownPassOrOther.length)}%
@@ -203,9 +208,15 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </span>
           </div>
         </div>
-
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">Scrambles/Runs</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>Scrambles/Runs</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                Scrambles/Runs
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(goodScramblesAndRuns.length, scrambeledOrRan.length)}%
@@ -215,9 +226,15 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </span>
           </div>
         </div>
-
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">RPO/Option Reads</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>RPO/Option Reads</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                RPO/Option Reads
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(yesRPOAndOptionReads.length, rposAndReadOptions.length)}%
@@ -227,9 +244,15 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </span>
           </div>
         </div>
-
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">Pocket Presence</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>Pocket Presence</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                Pocket Presence
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(pocketPresence.length, typeOfPass.length)}%
@@ -239,9 +262,15 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </span>
           </div>
         </div>
-
-        <div>
-          <h4 className="text-xs font-medium text-neutral-600 truncate">Sack on QB</h4>
+        <div className="relative">
+          <h4 className="text-xs font-medium text-neutral-600 truncate group">
+            <span>Sack on QB</span>
+            <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+              <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                Sack on QB
+              </div>
+            </div>
+          </h4>
           <div className="flex items-baseline gap-1">
             <span className="text-base font-bold">
               {calculateExecutionPercentage(sackedOnQB.length, sacked.length)}%
@@ -252,17 +281,28 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
           </div>
         </div>
       </div>
-
-      {/* Audibles section */}
       <div className="flex items-center justify-between border-t border-neutral-100 pt-2">
         <div className="flex gap-4">
-          <div>
-            <h4 className="text-xs font-medium text-neutral-600">Missed Audibles</h4>
+          <div className="relative">
+            <h4 className="text-xs font-medium text-neutral-600 truncate group">
+              <span>Missed Audibles</span>
+              <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                  Missed Audibles
+                </div>
+              </div>
+            </h4>
             <span className="text-base font-bold">{audibleOpportunityMissed.length}</span>
           </div>
-
-          <div>
-            <h4 className="text-xs font-medium text-neutral-600">Audible Hit Rate</h4>
+          <div className="relative">
+            <h4 className="text-xs font-medium text-neutral-600 truncate group">
+              <span>Audible Hit Rate</span>
+              <div className="absolute bottom-full left-0 mb-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                <div className="bg-white shadow-md border border-neutral-200 rounded px-2 py-1 text-xs whitespace-nowrap">
+                  Audible Hit Rate
+                </div>
+              </div>
+            </h4>
             <div className="flex items-baseline gap-1">
               <span className="text-base font-bold">
                 {calculateExecutionPercentage(audibleSuccess.length, audibleCalled.length)}%
@@ -273,7 +313,6 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
             </div>
           </div>
         </div>
-
         <button
           className="text-sm text-neutral-900 font-medium hover:text-neutral-400 underline"
           onClick={() => setIsAnalysisModelOpen(true)}
@@ -281,7 +320,6 @@ export default function QBAnalysis({ qb, plays }: { qb: { name: string; number: 
           Play Grouping Analysis
         </button>
       </div>
-
       {isAnalysisModelOpen && (
         <FullScreenModal
           title="Play Grouping Analysis"

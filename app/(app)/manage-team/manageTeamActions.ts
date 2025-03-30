@@ -2,13 +2,13 @@
 
 import { getCurrentSession } from "@/auth/auth";
 import { sql } from "@/db/db";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod"
-import { Resend } from "resend";
+import { UserRole } from "@/types/userTypes";
 import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeHexLowerCase } from "@oslojs/encoding";
-import { UserRole } from "@/types/userTypes";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { Resend } from "resend";
+import { z } from "zod";
 
 type ActionState = {
   error: string;
@@ -91,7 +91,6 @@ export async function deletePlayGrouping(
   try {
     const id = formData.get("id") as string;
     const isAdmin = (await (await getCurrentSession()).user?.role) === "Admin";
-
     if (!isAdmin) redirect("/dashboard");
     if (!id) {
       return {
@@ -99,7 +98,20 @@ export async function deletePlayGrouping(
         success: false,
       };
     }
-
+    
+    // Check if any plays are associated with this grouping
+    const playsWithGrouping = await sql`
+      SELECT COUNT(*) as count FROM plays WHERE play_grouping_id = ${Number.parseInt(id)}
+    `;
+    
+    // If plays exist with this grouping ID, don't allow deletion
+    if (playsWithGrouping[0].count > 0) {
+      return {
+        error: "Cannot delete play grouping because it contains plays. Please remove or reassign all plays first.",
+        success: false,
+      };
+    }
+    
     try {
       await sql`DELETE FROM play_grouping WHERE id = ${Number.parseInt(id)}`;
     } catch (error) {
@@ -111,7 +123,6 @@ export async function deletePlayGrouping(
       success: false,
     };
   }
-
   revalidatePath("/manage-team", "page");
   return { error: "", success: true };
 }

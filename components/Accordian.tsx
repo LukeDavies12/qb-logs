@@ -1,7 +1,7 @@
 "use client"
 
-import { type ReactNode, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import { type ReactNode, useState } from "react"
 
 interface AccordionProps {
   title: string
@@ -31,10 +31,10 @@ export default function Accordion({
       <button
         type="button"
         onClick={toggleAccordion}
-        className={`w-full flex justify-between items-center py-2 px-4 text-neutral-950 bg-neutral-100 text-sm font-medium ${titleClassName}`}
+        className={`w-full flex justify-between items-center py-1.5 px-3 text-neutral-950 bg-neutral-100 text-sm ${titleClassName}`}
         aria-expanded={isOpen}
       >
-        <span className="font-bold">{title}</span>
+        <span>{title}</span>
         {isOpen ? (
           <ChevronUp className="h-5 w-5 text-neutral-700" />
         ) : (

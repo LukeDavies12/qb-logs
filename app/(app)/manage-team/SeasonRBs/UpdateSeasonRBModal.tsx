@@ -1,24 +1,21 @@
 "use client"
 
-import type React from "react"
-import { useRef, useEffect, useState } from "react"
-import TextInput from "@/components/TextInput"
-import DefaultButton from "@/components/DefaultButton"
-import SecondaryButton from "@/components/SecondaryButton"
-import { useActionState, useTransition } from "react"
-import Modal from "@/components/Modal"
-import CheckboxInput from "@/components/CheckboxInput"
-import type { SeasonRB } from "@/types/seasonType"
-
-// You'll need to create this action in your actions file
 import { updateSeasonRB } from "@/app/(app)/manage-team/manageTeamActions"
+import CheckboxInput from "@/components/CheckboxInput"
 import ComboBox, { type ComboBoxRef } from "@/components/Combobox"
+import DefaultButton from "@/components/DefaultButton"
+import Modal from "@/components/Modal"
+import SecondaryButton from "@/components/SecondaryButton"
+import TextInput from "@/components/TextInput"
+import type { SeasonRB } from "@/types/seasonType"
+import type React from "react"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 
 interface UpdateSeasonRBModalProps {
   isOpen: boolean
   onClose: () => void
   seasonRB: SeasonRB
-  allSeasonRBs: SeasonRB[] // Need all RBs to check for existing starters
+  allSeasonRBs: SeasonRB[]
   onUpdate?: () => void
 }
 
@@ -35,14 +32,10 @@ export default function UpdateSeasonRBModal({
   const yearRef = useRef<ComboBoxRef>(null)
   const [formKey, setFormKey] = useState(0)
 
-  // Create a unique modal ID to prefix all form elements
   const modalId = `rb-modal-${seasonRB.id}`
-
-  // Create a new action state each time
   const [state, formAction, isPending] = useActionState(updateSeasonRB, { error: "", success: false })
   const [isPendingTransition, startTransition] = useTransition()
 
-  // Available years for the ComboBox
   const playerYears = [
     "Freshman",
     "Redshirt Freshman",
@@ -53,7 +46,7 @@ export default function UpdateSeasonRBModal({
     "Senior",
     "Redshirt Senior",
   ]
-  // Reset form when modal opens with new seasonRB
+
   useEffect(() => {
     if (isOpen) {
       setFormKey((prev) => prev + 1)
@@ -62,7 +55,6 @@ export default function UpdateSeasonRBModal({
     }
   }, [isOpen])
 
-  // Handle success
   useEffect(() => {
     if (state.success) {
       if (onUpdate) onUpdate()

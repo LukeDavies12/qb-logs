@@ -1,9 +1,14 @@
 "use client"
 
+import Accordion from "@/components/Accordian"
+import Combobox, { type ComboBoxRef } from "@/components/Combobox"
+import ComboboxWKeys from "@/components/ComboboxWKeys"
+import DefaultButton from "@/components/DefaultButton"
 import MultilineInput from "@/components/MultilineInput"
-import { useRef, useState, useCallback, useEffect, useActionState } from "react"
-import { useFormStatus } from "react-dom"
-import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import MultiTagSelect, { type MultiTagSelectRef, type TagOption } from "@/components/MultiTagSelect"
+import TextInput from "@/components/TextInput"
+import YesNoToggle from "@/components/YesNoToggle"
+import { getVisibleFields } from "@/types/fieldVisibilityConfig"
 import {
   playExeuctionLevelsConst,
   type PlayGrouping,
@@ -11,15 +16,10 @@ import {
   type PlayResult,
   playResultsConst,
 } from "@/types/gameTypes"
-import Combobox, { type ComboBoxRef } from "@/components/Combobox"
-import TextInput from "@/components/TextInput"
-import { getVisibleFields } from "@/types/fieldVisibilityConfig"
-import DefaultButton from "@/components/DefaultButton"
+import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import { useActionState, useCallback, useEffect, useRef, useState } from "react"
+import { useFormStatus } from "react-dom"
 import { logPlayOnGame } from "../gameActions"
-import ComboboxWKeys from "@/components/ComboboxWKeys"
-import Accordion from "@/components/Accordian"
-import MultiTagSelect, { type MultiTagSelectRef, type TagOption } from "@/components/MultiTagSelect"
-import YesNoToggle from "@/components/YesNoToggle"
 
 function usePlayPersistence() {
   interface PlayState {
@@ -177,7 +177,6 @@ export default function LogGamePlayWithAccordion({
   const distanceRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // Only populate the form fields if previousPlay has values and we're not coming from a TD/INT/Fumble
     if (previousPlay.driveNum && formRef.current) {
       if (driveNumRef.current) driveNumRef.current.value = previousPlay.driveNum
       if (filmNumberRef.current) filmNumberRef.current.value = previousPlay.filmNumber
@@ -188,7 +187,6 @@ export default function LogGamePlayWithAccordion({
   }, [previousPlay, state?.success])
 
   const resetForm = useCallback(() => {
-    // Reset all state variables
     setPlayType("")
     setPlayResult("")
     setAudibleOpportunityMissed(false)
@@ -269,7 +267,7 @@ export default function LogGamePlayWithAccordion({
 
   return (
     <Accordion title="Log Play" defaultOpen={false}>
-      <form className="p-4 bg-white text-sm" action={formAction} ref={formRef}>
+      <form className="p-3 bg-white text-sm" action={formAction} ref={formRef}>
         <input type="hidden" name="gameId" value={gameId} />
         <div className="md:grid md:grid-cols-3 md:gap-1 lg:grid lg:grid-cols-12 lg:gap-1 space-y-2 lg:space-y-0">
           <div className="lg:col-span-2 lg:flex lg:items-center">

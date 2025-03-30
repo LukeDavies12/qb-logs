@@ -1,8 +1,8 @@
 "use client"
 
-import type React from "react"
-import { useRef, useEffect } from "react"
 import { X } from "lucide-react"
+import type React from "react"
+import { useEffect, useRef } from "react"
 import H2 from "./H2"
 
 interface LargeModalProps {
@@ -13,63 +13,59 @@ interface LargeModalProps {
   showCloseButton?: boolean
 }
 
-export default function LargeModal({ 
-  isOpen, 
-  onClose, 
-  title, 
+export default function LargeModal({
+  isOpen,
+  onClose,
+  title,
   children,
   showCloseButton = true
 }: LargeModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
-  
+
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
-      
+
       if ((e.metaKey) && e.key === "Backspace") onClose()
     }
-    
+
     if (isOpen) {
       document.addEventListener("keydown", handleKeydown)
     }
-    
+
     return () => {
       document.removeEventListener("keydown", handleKeydown)
     }
   }, [isOpen, onClose])
-  
+
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose()
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener("mousedown", handleOutsideClick)
     }
-    
+
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick)
     }
   }, [isOpen, onClose])
 
   if (!isOpen) return null
-  
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/25 z-50">
-      <div 
+    <div className="fixed inset-0 flex items-center justify-center bg-black/75 z-50">
+      <div
         className="bg-white rounded-lg w-[96%] h-[94%] flex flex-col"
         ref={modalRef}
       >
-        <div className="flex justify-between items-center px-6 py-2">
+        <div className="flex justify-between items-center px-6 mt-2">
           <H2 text={title} />
           {showCloseButton && (
-            <button 
-              onClick={onClose} 
-              className="p-2 rounded-full hover:bg-red-50 hover:text-red-700 text-neutral-600"
-              aria-label="Close modal"
-            >
+            <button onClick={onClose} className="p-1 rounded-full text-neutral-500 hover:bg-red-50 hover:text-red-800">
               <X className="w-5 h-5" />
             </button>
           )}

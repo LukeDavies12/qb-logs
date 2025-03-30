@@ -11,6 +11,7 @@ interface TextInputProps {
   className?: string
   id?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  autoFocus?: boolean
 }
 
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
@@ -25,7 +26,8 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       defaultValue,
       className,
       id,
-      onChange
+      onChange,
+      autoFocus = false
     }: TextInputProps,
     ref
   ) => {

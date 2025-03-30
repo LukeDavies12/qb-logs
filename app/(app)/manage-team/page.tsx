@@ -1,33 +1,26 @@
-import { getCurrentSession } from "@/auth/auth";
-import H1 from "@/components/H1";
-import H2 from "@/components/H2";
-import { sql } from "@/db/db";
-import { SeasonQB, SeasonRB } from "@/types/seasonType";
-import { Invite, User } from "@/types/userTypes";
-import { redirect } from "next/navigation";
-import PlayGroupingsTable from "./PlayGroupings/PlayGroupingsTable";
-import AddPlayGrouping from "./PlayGroupings/AddPlayGrouping";
-import SeasonQBsTable from "./SeasonQBs/SeasonQBsTable";
-import AddSeasonQB from "./SeasonQBs/AddSeasonQB";
-import SeasonRBsTable from "./SeasonRBs/SeasonRBsTable";
-import AddSeasonRB from "./SeasonRBs/AddSeasonRB";
-import AddTeamInvite from "./Users/AddTeamInvite";
-import UsersAndInvitesTable from "./Users/UsersTable";
-import { PlayGrouping } from "@/types/gameTypes";
+import { getCurrentSession } from "@/auth/auth"
+import H1 from "@/components/H1"
+import { sql } from "@/db/db"
+import type { PlayGrouping } from "@/types/gameTypes"
+import type { Season, SeasonQB, SeasonRB } from "@/types/seasonType"
+import type { Invite, User } from "@/types/userTypes"
+import { redirect } from "next/navigation"
+import TeamTabs from "./team-tabs"
 
 interface ManageTeamData {
-  currentUser: User;
-  seasonQBs: SeasonQB[];
-  seasonRBs: SeasonRB[];
-  playGroupings: PlayGrouping[];
-  teamUsers: User[];
-  teamInvites: Invite[];
+  currentUser: User
+  seasonQBs: SeasonQB[]
+  seasonRBs: SeasonRB[]
+  playGroupings: PlayGrouping[]
+  teamUsers: User[]
+  teamInvites: Invite[]
+  seasons: Season[]
 }
 
 export default async function ManageTeamPage() {
-  const { user } = await getCurrentSession();
+  const { user } = await getCurrentSession()
   if (!user || !user.team_id || !user.current_season_id) {
-    redirect("/dashboard");
+    redirect("/dashboard")
   }
 
   const results = await sql`
@@ -119,6 +112,17 @@ export default async function ManageTeamPage() {
         invite 
       WHERE 
         team_id = ${user.team_id}
+    ),
+    team_seasons AS (
+      SELECT 
+        id, 
+        team_id, 
+        year, 
+        type
+      FROM 
+        season 
+      WHERE 
+        team_id = ${user.team_id}
     )
     SELECT 
       'current_user' as data_type,
@@ -155,7 +159,13 @@ export default async function ManageTeamPage() {
       to_json(ti.*) as data
     FROM 
       team_invites ti
-  `;
+    UNION ALL
+    SELECT 
+      'season' as data_type,
+      to_json(s.*) as data
+    FROM 
+      team_seasons s
+  `
 
   const data: ManageTeamData = {
     currentUser: user as User,
@@ -163,67 +173,49 @@ export default async function ManageTeamPage() {
     seasonRBs: [],
     playGroupings: [],
     teamUsers: [],
-    teamInvites: []
-  };
+    teamInvites: [],
+    seasons: [],
+  }
 
   results.forEach((row) => {
     switch (row.data_type) {
-      case 'current_user':
-        data.currentUser = row.data as User;
-        break;
-      case 'season_qb':
-        data.seasonQBs.push(row.data as SeasonQB);
-        break;
-      case 'season_rb':
-        data.seasonRBs.push(row.data as SeasonRB);
-        break;
-      case 'play_grouping':
-        data.playGroupings.push(row.data as PlayGrouping);
-        break;
-      case 'team_user':
-        data.teamUsers.push(row.data as User);
-        break;
-      case 'team_invite':
-        const invite = row.data as any;
-        invite.created_at = new Date(invite.created_at);
-        invite.expires_at = new Date(invite.expires_at);
-        data.teamInvites.push(invite as Invite);
-        break;
+      case "current_user":
+        data.currentUser = row.data as User
+        break
+      case "season_qb":
+        data.seasonQBs.push(row.data as SeasonQB)
+        break
+      case "season_rb":
+        data.seasonRBs.push(row.data as SeasonRB)
+        break
+      case "play_grouping":
+        data.playGroupings.push(row.data as PlayGrouping)
+        break
+      case "team_user":
+        data.teamUsers.push(row.data as User)
+        break
+      case "team_invite":
+        const invite = row.data as any
+        invite.created_at = new Date(invite.created_at)
+        invite.expires_at = new Date(invite.expires_at)
+        data.teamInvites.push(invite as Invite)
+        break
+      case "season":
+        const season = row.data as any
+        season.created_at = new Date(season.created_at)
+        data.seasons.push(season as Season)
+        break
     }
-  });
+  })
 
-  const qbsHasStarter = data.seasonQBs.some(qb => qb.is_starter);
-  const rbsHasStarter = data.seasonRBs.some(rb => rb.is_starter);
+  const qbsHasStarter = data.seasonQBs.some((qb) => qb.is_starter)
+  const rbsHasStarter = data.seasonRBs.some((rb) => rb.is_starter)
 
   return (
     <>
       <H1 text="Manage Team" />
-      <div className="space-y-4 mb-5">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
-            <H2 text="Play Groupings" />
-            <AddPlayGrouping />
-            <PlayGroupingsTable playGroupings={data.playGroupings} />
-          </div>
-          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
-            <H2 text="Users and Invites" />
-            <AddTeamInvite />
-            <UsersAndInvitesTable users={data.teamUsers} invites={data.teamInvites} currentUserId={user.id as number} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
-            <H2 text="Season QBs" />
-            <AddSeasonQB hasStarter={qbsHasStarter} />
-            <SeasonQBsTable seasonQBs={data.seasonQBs} />
-          </div>
-          <div className="h-[580px] rounded-lg border px-3 flex flex-col">
-            <H2 text="Season RBs" />
-            <AddSeasonRB hasStarter={rbsHasStarter} />
-            <SeasonRBsTable seasonRBs={data.seasonRBs} />
-          </div>
-        </div>
-      </div >
+      <TeamTabs data={data} qbsHasStarter={qbsHasStarter} rbsHasStarter={rbsHasStarter} />
     </>
-  );
+  )
 }
+

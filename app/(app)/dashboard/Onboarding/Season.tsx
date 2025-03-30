@@ -1,18 +1,17 @@
 "use client"
 
-import React, { useRef } from "react"
-import { useActionState, useState } from "react"
 import { XIcon } from "lucide-react"
+import React, { useActionState, useRef, useState } from "react"
 
-import ComboBox, { ComboBoxRef } from "@/components/Combobox"
-import DefaultButton from "@/components/DefaultButton"
-import TextInput from "@/components/TextInput"
-import SecondaryButton from "@/components/SecondaryButton"
-import DateInput from "@/components/DateInput"
 import Alert from "@/components/Alert"
-import { ActionStateSeason, createSeasonAction } from "./onboardActions"
 import CheckboxInput from "@/components/CheckboxInput"
+import ComboBox, { ComboBoxRef } from "@/components/Combobox"
+import DateInput from "@/components/DateInput"
+import DefaultButton from "@/components/DefaultButton"
+import SecondaryButton from "@/components/SecondaryButton"
+import TextInput from "@/components/TextInput"
 import { SeasonType } from "@/types/seasonType"
+import { ActionStateSeason, createSeasonAction } from "./onboardActions"
 
 export default function SeasonOnboardingForm() {
   const [state, action, isPending] = useActionState(async (prevState: ActionStateSeason, formData: FormData) => {

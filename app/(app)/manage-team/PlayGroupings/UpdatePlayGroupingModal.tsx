@@ -2,13 +2,12 @@
 
 import type React from "react"
 
-import { useRef, useEffect, useState } from "react"
-import TextInput from "@/components/TextInput"
-import DefaultButton from "@/components/DefaultButton"
-import SecondaryButton from "@/components/SecondaryButton"
-import { useActionState, useTransition } from "react"
 import { updatePlayGrouping } from "@/app/(app)/manage-team/manageTeamActions"
+import DefaultButton from "@/components/DefaultButton"
 import Modal from "@/components/Modal"
+import SecondaryButton from "@/components/SecondaryButton"
+import TextInput from "@/components/TextInput"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 
 interface UpdatePlayGroupingModalProps {
   isOpen: boolean
@@ -31,11 +30,9 @@ export default function UpdatePlayGroupingModal({
   const formRef = useRef<HTMLFormElement>(null)
   const [formKey, setFormKey] = useState(0)
 
-  // Create a new action state each time
   const [state, formAction, isPending] = useActionState(updatePlayGrouping, { error: "", success: false })
   const [isPendingTransition, startTransition] = useTransition()
 
-  // Reset form when modal opens with new playGrouping
   useEffect(() => {
     if (isOpen) {
       setFormKey((prev) => prev + 1)
@@ -43,7 +40,6 @@ export default function UpdatePlayGroupingModal({
     }
   }, [isOpen])
 
-  // Handle success
   useEffect(() => {
     if (state.success) {
       if (onUpdate) onUpdate()
@@ -92,6 +88,7 @@ export default function UpdatePlayGroupingModal({
             type="submit"
             text={isPending || isPendingTransition ? "Updating..." : "Update"}
             disabled={isPending || isPendingTransition}
+            className="w-28"
           />
         </div>
       </form>

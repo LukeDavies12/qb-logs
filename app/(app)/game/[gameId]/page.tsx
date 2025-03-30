@@ -1,15 +1,14 @@
 import { getCurrentSession } from "@/auth/auth"
 import H1 from "@/components/H1"
+import type { TagOption } from "@/components/MultiTagSelect"
+import QBAnalysis from "@/components/QBAnalysis"
 import { sql } from "@/db/db"
 import type { Game, GameDrive, GamePlay, PlayGrouping, PlayPlayGroupingType, PlayTag } from "@/types/gameTypes"
 import type { SeasonQB, SeasonRB } from "@/types/seasonType"
 import { redirect } from "next/navigation"
-import type { TagOption } from "@/components/MultiTagSelect"
-import H2 from "@/components/H2"
 import AddDrive from "./AddDrive/AddDrive"
-import LogGamePlay from "./LogPlay/LogGamePlay"
 import GamePlaysTable from "./LogPlay/GamePlaysTable"
-import QBAnalysis from "@/components/QBAnalysis"
+import LogGamePlay from "./LogPlay/LogGamePlay"
 
 export default async function Page({
   params,
@@ -47,7 +46,6 @@ export default async function Page({
     redirect("/dashboard")
   }
 
-  // Parallelize the remaining queries with Promise.all
   const [seasonQBsData, seasonRBsData, playGroupingsData, tagsData, drivesData, playsData, playTagsData] =
     await Promise.all([
       // Query 1: Get season QBs
@@ -176,7 +174,6 @@ export default async function Page({
     `,
     ])
 
-  // Process the data
   const seasonQBs: SeasonQB[] = seasonQBsData.map((qb) => ({
     id: qb.id,
     name: qb.name,
@@ -185,7 +182,7 @@ export default async function Page({
     is_active: qb.is_active,
     is_starter: qb.is_starter,
     season_id: seasonId,
-    team_qb_id: 0, // This field is not needed for the form
+    team_qb_id: 0,
   }))
 
   const seasonRBs: SeasonRB[] = seasonRBsData.map((rb) => ({
@@ -196,7 +193,7 @@ export default async function Page({
     is_active: rb.is_active,
     is_starter: rb.is_starter,
     season_id: seasonId,
-    team_rb_id: 0, // This field is not needed for the form
+    team_rb_id: 0,
   }))
 
   const playGroupings: PlayGrouping[] = playGroupingsData.map((pg) => ({
@@ -212,10 +209,8 @@ export default async function Page({
     team_id: tag.team_id,
   }))
 
-  // Create a map of play tags for faster lookup
   const playTagsMap: Record<number, PlayTag[]> = {}
 
-  // Process play tags data
   playTagsData.forEach((tag) => {
     if (!playTagsMap[tag.play_id]) {
       playTagsMap[tag.play_id] = []
@@ -229,7 +224,6 @@ export default async function Page({
     })
   })
 
-  // Build the game object
   const game: Game = {
     id,
     date: new Date(date),
@@ -238,10 +232,8 @@ export default async function Page({
     drives: [],
   }
 
-  // Create a map of drives for faster lookup
   const drivesMap: Record<number, GameDrive> = {}
 
-  // Process drives data
   drivesData.forEach((drive) => {
     const gameDrive: GameDrive = {
       id: drive.id,
@@ -253,10 +245,8 @@ export default async function Page({
     game.drives.push(gameDrive)
   })
 
-  // Extract unique play calls for filtering
   const uniquePlayCalls = new Set<string>()
 
-  // Process plays data
   playsData.forEach((row) => {
     if (row.play_call) {
       uniquePlayCalls.add(row.play_call)
@@ -325,7 +315,6 @@ export default async function Page({
       notes: row.notes,
     }
 
-    // Add play to its drive
     if (drivesMap[row.drive_id]) {
       drivesMap[row.drive_id].Plays.push(play)
     }
@@ -336,7 +325,7 @@ export default async function Page({
   return (
     <>
       <H1 text={`${game.date.getFullYear()} vs ${game.against}`} />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 items-end">
         {seasonQBs.map((qb) => {
           const qbPlays = game.drives
             .flatMap(drive => drive.Plays)
@@ -352,11 +341,9 @@ export default async function Page({
             />
           );
         })}
-      </div>
-      <div className="mt-3">
         <AddDrive gameId={game.id} />
       </div>
-      <div className="mt-3">
+      <div className="mt-6">
         <LogGamePlay
           seasonQBs={seasonQBs}
           seasonRBs={seasonRBs}
@@ -366,7 +353,6 @@ export default async function Page({
         />
       </div>
       <div className="mt-3">
-        <H2 text="Play Chart" />
         <GamePlaysTable
           drives={game.drives}
           playGroupings={playGroupings}

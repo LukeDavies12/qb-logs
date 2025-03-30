@@ -2,7 +2,7 @@ import { getCurrentSession } from "@/auth/auth";
 import { LogoutButton } from "@/components/LogoutButton";
 import LogoWhite from "@/components/LogoWhite";
 import { Tooltip } from "@/components/Tooltip";
-import { ChartArea, HomeIcon, Settings2 } from "lucide-react";
+import { HomeIcon, Settings2, User2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -15,52 +15,53 @@ export default async function AppLayout({
   if (!user) redirect("/");
 
   return (
-    <div className="px-3 lg:px-4 flex">
-      <div className="bg-neutral-950 text-white w-[54px] h-screen fixed top-0 left-0 z-10 flex justify-center">
-        <div className="py-3 h-full flex flex-col justify-between items-center w-full">
-          <div className="flex flex-col gap-8 items-center w-full">
-            <Link href={"/dashboard"} className="flex justify-center">
+    <div className="flex flex-col">
+      <div className="bg-neutral-950 text-white py-1 w-full flex items-center px-4">
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-3">
+            <Link href={"/dashboard"} className="flex items-center">
               <LogoWhite />
             </Link>
-            <div className="flex flex-col gap-3 items-center w-full">
-              <Tooltip text="Dashboard" position="right">
+            <div className="flex items-center gap-3">
+              <Tooltip text="Dashboard" position="bottom">
                 <Link
                   href={"/dashboard"}
                   className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
                 >
-                  <HomeIcon className="w-5" />
+                  <HomeIcon className="h-4" />
                 </Link>
               </Tooltip>
-              {/* <Tooltip text="All Plays" position="right">
-                <Link
-                  href={"/all-plays"}
-                  className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
-                >
-                  <ChartArea className="w-5" />
-                </Link>
-              </Tooltip> */}
               {user.role === "Admin" && (
-                <Tooltip text="Manage Team" position="right">
+                <Tooltip text="Manage Team" position="bottom">
                   <Link
                     href={"/manage-team"}
                     className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
                   >
-                    <Settings2 className="w-5" />
+                    <Settings2 className="h-4" />
                   </Link>
                 </Tooltip>
               )}
+              <Tooltip text="User Settings" position="bottom">
+                <Link
+                  href={"/user-settings"}
+                  className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-md flex justify-center items-center w-[38px] h-[38px]"
+                >
+                  <User2 className="h-4" />
+                </Link>
+              </Tooltip>
             </div>
           </div>
-          <div className="flex justify-center w-full">
-            <Tooltip text="Logout" position="right">
-              <div className="flex justify-center w-full">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-neutral-50 select-none cursor-default">{user.display_name}</div>
+            <Tooltip text="Logout" position="bottom">
+              <div>
                 <LogoutButton />
               </div>
             </Tooltip>
           </div>
         </div>
       </div>
-      <div className="ml-[40px] px-3 w-full">
+      <div className="w-full px-4">
         {children}
       </div>
     </div>

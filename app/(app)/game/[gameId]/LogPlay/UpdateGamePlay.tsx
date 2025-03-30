@@ -2,27 +2,26 @@
 
 import type React from "react"
 
+import Combobox, { type ComboBoxRef } from "@/components/Combobox"
+import ComboboxWKeys from "@/components/ComboboxWKeys"
+import DefaultButton from "@/components/DefaultButton"
 import MultilineInput from "@/components/MultilineInput"
-import { useRef, useState, useEffect, useTransition } from "react"
-import { useActionState } from "react"
-import { useFormStatus } from "react-dom"
-import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import MultiTagSelect, { type MultiTagSelectRef, type TagOption } from "@/components/MultiTagSelect"
+import TextInput from "@/components/TextInput"
+import YesNoToggle from "@/components/YesNoToggle"
+import { getVisibleFields } from "@/types/fieldVisibilityConfig"
 import {
   playExeuctionLevelsConst,
-  type PlayResult,
   playResultsConst,
   type GamePlay,
   type PlayGrouping,
   type PlayGroupingType,
+  type PlayResult,
 } from "@/types/gameTypes"
-import Combobox, { type ComboBoxRef } from "@/components/Combobox"
-import TextInput from "@/components/TextInput"
-import { getVisibleFields } from "@/types/fieldVisibilityConfig"
-import DefaultButton from "@/components/DefaultButton"
+import type { SeasonQB, SeasonRB } from "@/types/seasonType"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
+import { useFormStatus } from "react-dom"
 import { updatePlayOnGame } from "../gameActions"
-import ComboboxWKeys from "@/components/ComboboxWKeys"
-import MultiTagSelect, { type MultiTagSelectRef, type TagOption } from "@/components/MultiTagSelect"
-import YesNoToggle from "@/components/YesNoToggle"
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus()
@@ -67,9 +66,10 @@ export default function UpdatePlayForm({
   )
   const [audibleCalled, setAudibleCalled] = useState<boolean>(play.audible_called || false)
   const [audibleSuccess, setAudibleSuccess] = useState<boolean>(play.audible_success || false)
-  const [rpoReadMade, setRpoReadMade] = useState<boolean>(play.rpo_read_keys === true)
+  // Fix the initial state values for RPO and read option fields
+  const [rpoReadMade, setRpoReadMade] = useState<boolean>(play.rpo_read_keys === true || play.rpo_read_keys === null)
   const [readOptionReadKeys, setReadOptionReadKeys] = useState<boolean>(
-    play.read_option_read_keys === false ? false : true,
+    play.read_option_read_keys === true || play.read_option_read_keys === null,
   )
   const [sackOnQB, setSackOnQB] = useState<boolean>(play.sack_on_qb || false)
   // Initialize formModified to false explicitly
@@ -83,8 +83,8 @@ export default function UpdatePlayForm({
   )
 
   // Store initial values for comparison
-  const initialRpoReadMade = play.rpo_read_keys === false ? false : true
-  const initialReadOptionReadKeys = play.read_option_read_keys === false ? false : true
+  const initialRpoReadMade = play.rpo_read_keys === true || play.rpo_read_keys === null
+  const initialReadOptionReadKeys = play.read_option_read_keys === true || play.read_option_read_keys === null
   const initialAudibleOpportunityMissed = play.audible_opportunity_missed || false
   const initialAudibleCalled = play.audible_called || false
   const initialAudibleSuccess = play.audible_success || false
@@ -122,7 +122,6 @@ export default function UpdatePlayForm({
   const formRef = useRef<HTMLFormElement>(null)
   const initialRenderRef = useRef(true) // Create ref outside of useEffect
 
-  // Convert play tags to the format expected by MultiTagSelect
   const initialTags =
     play.tags?.map((tag) => ({
       id: tag.tag_id,
@@ -130,7 +129,6 @@ export default function UpdatePlayForm({
       team_id: tag.team_id,
     })) || []
 
-  // Create a snapshot of the initial form state for comparison
   const initialFormState = {
     qb_in_id: play.qb_in_id.toString(),
     drive_num: driveNum.toString(),
@@ -154,19 +152,29 @@ export default function UpdatePlayForm({
     audible_opportunity_missed: play.audible_opportunity_missed || false,
     audible_called: play.audible_called || false,
     audible_success: play.audible_success || false,
-    rpo_read_keys: play.rpo_read_keys === true,
-    read_option_read_keys: play.read_option_read_keys === false ? false : true,
+    rpo_read_keys: play.rpo_read_keys || true,
+    read_option_read_keys: play.read_option_read_keys || true,
     sack_on_qb: play.sack_on_qb || false,
     notes: play.notes || "",
     tags: JSON.stringify(initialTags.map((tag) => tag.id).sort()),
   }
 
+  // Update the checkFormModified function to handle null values correctly
   const checkFormModified = () => {
-    if (rpoReadMade !== initialRpoReadMade) {
+    // For boolean fields that can be null, treat null as true (default value)
+    if (
+      (play.rpo_read_keys === null && !rpoReadMade) ||
+      (play.rpo_read_keys !== null && rpoReadMade !== play.rpo_read_keys)
+    ) {
+      console.log("RPO Read Keys changed", play.rpo_read_keys, rpoReadMade)
       return true
     }
 
-    if (readOptionReadKeys !== initialReadOptionReadKeys) {
+    if (
+      (play.read_option_read_keys === null && !readOptionReadKeys) ||
+      (play.read_option_read_keys !== null && readOptionReadKeys !== play.read_option_read_keys)
+    ) {
+      console.log("Read Option Keys changed", play.read_option_read_keys, readOptionReadKeys)
       return true
     }
 
@@ -305,15 +313,10 @@ export default function UpdatePlayForm({
     return false
   }
 
-  // Replace the existing useEffect for form change detection with this improved version
   useEffect(() => {
-    // Skip the initial render check since we're using the dependency array properly
     const isModified = checkFormModified()
     console.log("Form modified check:", isModified)
     setFormModified(isModified)
-
-    // No need for event listeners since we're directly checking on state changes
-    // This will run whenever any of the dependency values change
   }, [
     audibleOpportunityMissed,
     audibleCalled,
@@ -506,7 +509,9 @@ export default function UpdatePlayForm({
 
                 setPlayType(newPlayType)
                 setPlayGroupingValue(value)
-                setFormModified(true) 
+
+                // Don't call checkFormModified directly, let the useEffect handle it
+                // The state update will trigger the useEffect
               }}
               options={
                 playGroupings?.map((pg) => ({

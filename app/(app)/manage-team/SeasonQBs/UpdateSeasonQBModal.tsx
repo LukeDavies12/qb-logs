@@ -1,24 +1,21 @@
 "use client"
 
-import type React from "react"
-import { useRef, useEffect, useState } from "react"
-import TextInput from "@/components/TextInput"
-import DefaultButton from "@/components/DefaultButton"
-import SecondaryButton from "@/components/SecondaryButton"
-import { useActionState, useTransition } from "react"
-import Modal from "@/components/Modal"
-import CheckboxInput from "@/components/CheckboxInput"
-import type { SeasonQB } from "@/types/seasonType"
-
-// You'll need to create this action in your actions file
 import { updateSeasonQB } from "@/app/(app)/manage-team/manageTeamActions"
+import CheckboxInput from "@/components/CheckboxInput"
 import ComboBox, { type ComboBoxRef } from "@/components/Combobox"
+import DefaultButton from "@/components/DefaultButton"
+import Modal from "@/components/Modal"
+import SecondaryButton from "@/components/SecondaryButton"
+import TextInput from "@/components/TextInput"
+import type { SeasonQB } from "@/types/seasonType"
+import type React from "react"
+import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 
 interface UpdateSeasonQBModalProps {
   isOpen: boolean
   onClose: () => void
   seasonQB: SeasonQB
-  allSeasonQBs: SeasonQB[] // Need all QBs to check for existing starters
+  allSeasonQBs: SeasonQB[]
   onUpdate?: () => void
 }
 
@@ -35,14 +32,11 @@ export default function UpdateSeasonQBModal({
   const yearRef = useRef<ComboBoxRef>(null)
   const [formKey, setFormKey] = useState(0)
 
-  // Create a unique modal ID to prefix all form elements
   const modalId = `qb-modal-${seasonQB.id}`
 
-  // Create a new action state each time
   const [state, formAction, isPending] = useActionState(updateSeasonQB, { error: "", success: false })
   const [isPendingTransition, startTransition] = useTransition()
 
-  // Available years for the ComboBox
   const playerYears = [
     "Freshman",
     "Redshirt Freshman",
@@ -51,10 +45,9 @@ export default function UpdateSeasonQBModal({
     "Junior",
     "Redshirt Junior",
     "Senior",
-    "Redshirt Senior",
-    "Graduate",
+    "Redshirt Senior"
   ]
-  // Reset form when modal opens with new seasonQB
+  
   useEffect(() => {
     if (isOpen) {
       setFormKey((prev) => prev + 1)
@@ -63,7 +56,6 @@ export default function UpdateSeasonQBModal({
     }
   }, [isOpen])
 
-  // Handle success
   useEffect(() => {
     if (state.success) {
       if (onUpdate) onUpdate()
@@ -79,13 +71,11 @@ export default function UpdateSeasonQBModal({
     const number = formData.get("number") as string
     const isStarter = Boolean(formData.get("is_starter"))
 
-    // Basic validation
     if (!name.trim() || !number.trim()) {
       setFormError(true)
       return
     }
 
-    // Check if trying to set as starter when another QB is already starter
     if (isStarter && !seasonQB.is_starter) {
       const existingStarter = allSeasonQBs.find((qb) => qb.is_starter && qb.id !== seasonQB.id)
       if (existingStarter) {
@@ -94,16 +84,13 @@ export default function UpdateSeasonQBModal({
       }
     }
 
-    // Clear errors if validation passes
     setFormError(false)
     setStarterError(false)
 
-    // Add ID to form data
     formData.append("id", seasonQB.id.toString())
     formData.append("team_qb_id", seasonQB.team_qb_id.toString())
     formData.append("season_id", seasonQB.season_id.toString())
 
-    // Handle checkbox values - CheckboxInput returns "true" when checked, null when unchecked
     formData.set("is_active", formData.get("is_active") ? "true" : "false")
     formData.set("is_starter", formData.get("is_starter") ? "true" : "false")
 
@@ -126,7 +113,6 @@ export default function UpdateSeasonQBModal({
             required
             error={formError}
           />
-
           <TextInput
             label="Number"
             name="number"
@@ -137,7 +123,6 @@ export default function UpdateSeasonQBModal({
             required
             error={formError}
           />
-
           <ComboBox
             ref={yearRef}
             label="Year"
@@ -148,7 +133,6 @@ export default function UpdateSeasonQBModal({
             required={false}
             error={formError}
           />
-
           <div className="flex flex-col gap-2">
             <CheckboxInput
               id={`${modalId}-is_active`}
@@ -156,7 +140,6 @@ export default function UpdateSeasonQBModal({
               label="Active"
               defaultChecked={seasonQB.is_active}
             />
-
             <CheckboxInput
               id={`${modalId}-is_starter`}
               name="is_starter"
@@ -164,7 +147,6 @@ export default function UpdateSeasonQBModal({
               defaultChecked={seasonQB.is_starter}
               disabled={!seasonQB.is_starter && allSeasonQBs.some((qb) => qb.is_starter && qb.id !== seasonQB.id)}
             />
-
             {starterError && (
               <p className="text-xs text-red-600 mt-1">
                 Another QB is already set as starter. Please unset that QB first.
@@ -172,9 +154,7 @@ export default function UpdateSeasonQBModal({
             )}
           </div>
         </div>
-
         {state.error && <p className="text-sm text-red-600 mt-4">{state.error}</p>}
-
         <div className="flex justify-end gap-2 mt-6">
           <SecondaryButton type="button" text="Cancel" onClick={onClose} />
           <DefaultButton

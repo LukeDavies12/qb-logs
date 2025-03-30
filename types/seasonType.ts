@@ -5,6 +5,7 @@ export interface Season {
   id: number;
   year: number;
   team_id: number;
+  type: SeasonType;
 }
 
 export interface SeasonQB {
