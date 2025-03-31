@@ -2,11 +2,13 @@
 
 import { getCurrentSession } from "@/auth/auth"
 import { sql } from "@/db/db"
+import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 interface CreateSeasonParams {
   year: number
   type: "Fall" | "Spring"
+  springGameDate?: string
 }
 
 interface Player {
@@ -90,6 +92,7 @@ export async function fetchPreviousSeasonPlayers() {
   }
 }
 
+// Fixed createSeason function with proper transaction handling
 export async function createSeason(
   params: CreateSeasonParams & {
     carryoverQBs?: Player[]
@@ -116,167 +119,190 @@ export async function createSeason(
     throw new Error(`A ${params.type} ${params.year} season already exists.`)
   }
 
-  // Collect all queries to execute in a transaction
-  const queries = []
+  try {
+    // First, create the season to get its ID
+    const seasonResult = await sql`
+      INSERT INTO season (team_id, year, type)
+      VALUES (${user.team_id}, ${params.year}, ${params.type})
+      RETURNING id
+    `
 
-  // Create season
-  queries.push(sql`
-    INSERT INTO season (team_id, year, type, created_at)
-    VALUES (${user.team_id}, ${params.year}, ${params.type}, NOW())
-    RETURNING id
-  `)
+    if (!seasonResult || seasonResult.length === 0) {
+      throw new Error("Failed to create season")
+    }
 
-  // Execute the first query to get the season ID
-  const result = await sql.transaction(queries)
+    const seasonId = seasonResult[0].id
 
-  if (!result || result.length === 0) {
-    throw new Error("Failed to create season")
-  }
+    // Prepare all the queries for the transaction
+    const queries = []
 
-  // Based on the error, result[0] is an array of records
-  // We need to access the first record in that array
-  if (!result[0] || !Array.isArray(result[0]) || result[0].length === 0) {
-    throw new Error("Failed to retrieve season result")
-  }
+    // 1. Update user's current season
+    queries.push(sql`
+      UPDATE "user"
+      SET current_season_id = ${seasonId}
+      WHERE id = ${user.id}
+    `)
 
-  // Get the ID from the first record in the array
-  const seasonId = result[0][0]?.id
-  if (!seasonId) {
-    throw new Error("Failed to retrieve season ID")
-  }
+    // 2. Create a Spring Game if this is a Spring season and a date was provided
+    if (params.type === "Spring" && params.springGameDate) {
+      queries.push(sql`
+        INSERT INTO game (season_id, date, against)
+        VALUES (
+          ${seasonId},
+          ${new Date(params.springGameDate)},
+          'Spring Game'
+        )
+      `)
+    }
 
-  // Start a new array of queries for the rest of the operations
-  const additionalQueries = []
+    // Process carryover QBs and RBs, and new QBs and RBs
+    // We need to do these operations outside the main transaction
+    // because they require getting IDs from previous operations
 
-  // Update user's current season
-  additionalQueries.push(sql`
-    UPDATE "user"
-    SET current_season_id = ${seasonId}
-    WHERE id = ${user.id}
-  `)
+    // Execute the transaction for the initial operations
+    if (queries.length > 0) {
+      await sql.transaction(queries)
+    }
 
-  // Handle carryover QBs
-  if (params.carryoverQBs?.length) {
-    for (const qb of params.carryoverQBs) {
-      // First get the team_qb_id
-      const teamQbResult = await sql`
-        SELECT team_qb_id FROM season_qb WHERE id = ${qb.id}
-      `
+    // Now handle players in separate transactions
 
-      if (teamQbResult.length > 0) {
-        const teamQbId = teamQbResult[0].team_qb_id
+    // 3. Handle carryover QBs
+    if (params.carryoverQBs?.length) {
+      for (const qb of params.carryoverQBs) {
+        // Get the team_qb_id
+        const teamQbResult = await sql`
+          SELECT team_qb_id FROM season_qb WHERE id = ${qb.id}
+        `
 
-        // Add query to insert into season_qb
-        additionalQueries.push(sql`
-          INSERT INTO season_qb (team_qb_id, season_id, name, year, number, is_active, is_starter)
-          VALUES (
-            ${teamQbId}, 
-            ${seasonId}, 
-            ${qb.name}, 
-            ${qb.year}, 
-            ${qb.number || null}, 
-            ${qb.is_active || true}, 
-            ${qb.is_starter || false}
-          )
-        `)
+        if (teamQbResult.length > 0) {
+          const teamQbId = teamQbResult[0].team_qb_id
+
+          // Insert into season_qb
+          await sql`
+            INSERT INTO season_qb (team_qb_id, season_id, name, year, number, is_active, is_starter)
+            VALUES (
+              ${teamQbId}, 
+              ${seasonId}, 
+              ${qb.name}, 
+              ${qb.year}, 
+              ${qb.number || null}, 
+              ${qb.is_active || true}, 
+              ${qb.is_starter || false}
+            )
+          `
+        }
       }
     }
-  }
 
-  // Handle carryover RBs
-  if (params.carryoverRBs?.length) {
-    for (const rb of params.carryoverRBs) {
-      // First get the team_rb_id
-      const teamRbResult = await sql`
-        SELECT team_rb_id FROM season_rb WHERE id = ${rb.id}
-      `
+    // 4. Handle carryover RBs
+    if (params.carryoverRBs?.length) {
+      for (const rb of params.carryoverRBs) {
+        // Get the team_rb_id
+        const teamRbResult = await sql`
+          SELECT team_rb_id FROM season_rb WHERE id = ${rb.id}
+        `
 
-      if (teamRbResult.length > 0) {
-        const teamRbId = teamRbResult[0].team_rb_id
+        if (teamRbResult.length > 0) {
+          const teamRbId = teamRbResult[0].team_rb_id
 
-        // Add query to insert into season_rb
-        additionalQueries.push(sql`
-          INSERT INTO season_rb (team_rb_id, season_id, name, year, number, is_active, is_starter)
-          VALUES (
-            ${teamRbId}, 
-            ${seasonId}, 
-            ${rb.name}, 
-            ${rb.year}, 
-            ${rb.number || null}, 
-            ${rb.is_active || true}, 
-            ${rb.is_starter || false}
-          )
-        `)
+          // Insert into season_rb
+          await sql`
+            INSERT INTO season_rb (team_rb_id, season_id, name, year, number, is_active, is_starter)
+            VALUES (
+              ${teamRbId}, 
+              ${seasonId}, 
+              ${rb.name}, 
+              ${rb.year}, 
+              ${rb.number || null}, 
+              ${rb.is_active || true}, 
+              ${rb.is_starter || false}
+            )
+          `
+        }
       }
     }
-  }
 
-  // Handle new QBs
-  if (params.newQBs?.length) {
-    for (const qb of params.newQBs) {
-      // We need to create team_qb entries first and get their IDs
-      // Since we need the IDs for the next operation, we can't include these in the transaction directly
-      // We'll do these one by one
-      const teamQbResult = await sql`
-        INSERT INTO team_qb (team_id, name, number)
-        VALUES (${user.team_id}, ${qb.name}, ${qb.number})
-        RETURNING id
-      `
+    // 5. Handle new QBs
+    if (params.newQBs?.length) {
+      for (const qb of params.newQBs) {
+        // Create team_qb entry and then season_qb entry in a single transaction
+        const qbQueries = []
 
-      if (teamQbResult.length > 0) {
-        const teamQbId = teamQbResult[0].id
+        // First create the team_qb
+        const teamQbResult = await sql`
+          INSERT INTO team_qb (team_id, name, number)
+          VALUES (${user.team_id}, ${qb.name}, ${qb.number})
+          RETURNING id
+        `
 
-        // Add query to insert into season_qb
-        additionalQueries.push(sql`
-          INSERT INTO season_qb (team_qb_id, season_id, name, year, number, is_active, is_starter)
-          VALUES (
-            ${teamQbId}, 
-            ${seasonId}, 
-            ${qb.name}, 
-            ${qb.year}, 
-            ${qb.number}, 
-            ${qb.is_active}, 
-            ${qb.is_starter}
-          )
-        `)
+        if (teamQbResult.length > 0) {
+          const teamQbId = teamQbResult[0].id
+
+          // Add query to insert into season_qb
+          qbQueries.push(sql`
+            INSERT INTO season_qb (team_qb_id, season_id, name, year, number, is_active, is_starter)
+            VALUES (
+              ${teamQbId}, 
+              ${seasonId}, 
+              ${qb.name}, 
+              ${qb.year}, 
+              ${qb.number}, 
+              ${qb.is_active}, 
+              ${qb.is_starter}
+            )
+          `)
+
+          // Execute the transaction for this QB
+          if (qbQueries.length > 0) {
+            await sql.transaction(qbQueries)
+          }
+        }
       }
     }
-  }
 
-  // Handle new RBs
-  if (params.newRBs?.length) {
-    for (const rb of params.newRBs) {
-      // We need to create team_rb entries first and get their IDs
-      const teamRbResult = await sql`
-        INSERT INTO team_rb (team_id, name, number)
-        VALUES (${user.team_id}, ${rb.name}, ${rb.number})
-        RETURNING id
-      `
+    // 6. Handle new RBs
+    if (params.newRBs?.length) {
+      for (const rb of params.newRBs) {
+        // Create team_rb entry and then season_rb entry in a single transaction
+        const rbQueries = []
 
-      if (teamRbResult.length > 0) {
-        const teamRbId = teamRbResult[0].id
+        // First create the team_rb
+        const teamRbResult = await sql`
+          INSERT INTO team_rb (team_id, name, number)
+          VALUES (${user.team_id}, ${rb.name}, ${rb.number})
+          RETURNING id
+        `
 
-        // Add query to insert into season_rb
-        additionalQueries.push(sql`
-          INSERT INTO season_rb (team_rb_id, season_id, name, year, number, is_active, is_starter)
-          VALUES (
-            ${teamRbId}, 
-            ${seasonId}, 
-            ${rb.name}, 
-            ${rb.year}, 
-            ${rb.number}, 
-            ${rb.is_active}, 
-            ${rb.is_starter}
-          )
-        `)
+        if (teamRbResult.length > 0) {
+          const teamRbId = teamRbResult[0].id
+
+          // Add query to insert into season_rb
+          rbQueries.push(sql`
+            INSERT INTO season_rb (team_rb_id, season_id, name, year, number, is_active, is_starter)
+            VALUES (
+              ${teamRbId}, 
+              ${seasonId}, 
+              ${rb.name}, 
+              ${rb.year}, 
+              ${rb.number}, 
+              ${rb.is_active}, 
+              ${rb.is_starter}
+            )
+          `)
+
+          // Execute the transaction for this RB
+          if (rbQueries.length > 0) {
+            await sql.transaction(rbQueries)
+          }
+        }
       }
     }
+  } catch (error) {
+    console.error("Transaction failed:", error)
+    throw new Error(`Failed to create season: ${error instanceof Error ? error.message : "Unknown error"}`)
   }
 
-  // Execute all the additional queries in a transaction
-  if (additionalQueries.length > 0) {
-    await sql.transaction(additionalQueries)
-  }
-
-  return { id: seasonId }
+  revalidatePath("/", "layout")
+  redirect("/dashboard")
 }
+

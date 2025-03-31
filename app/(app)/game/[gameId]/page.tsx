@@ -324,7 +324,9 @@ export default async function Page({
 
   return (
     <>
-      <H1 text={`${game.date.getFullYear()} vs ${game.against}`} />
+      <H1 text={game.against === 'Spring Game' 
+        ? `${game.date.getFullYear()} Spring Game`
+        : `${game.date.getFullYear()} vs ${game.against}`} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 items-end">
         {seasonQBs.map((qb) => {
           const qbPlays = game.drives

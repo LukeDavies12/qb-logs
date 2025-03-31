@@ -79,3 +79,9 @@ export interface PlayGrouping {
   type: PlayGroupingType;
   team_id: number;
 }
+
+export interface GamePractice {
+  id: number;
+  date: Date;
+  game_id: number;
+}

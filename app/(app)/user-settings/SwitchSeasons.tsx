@@ -34,7 +34,7 @@ export function SwitchSeasons({ seasons: initialSeasons, currentSeasonId }: Swit
         options={seasons.map((season) => `${season.type} ${season.year.toString().slice(-2)}`)}
         value={currentSeasonLabel}
         onChange={(label) => {
-          const season = seasons.find((s) => `${s.type} '${s.year.toString().slice(-2)}` === label)
+          const season = seasons.find((s) => `${s.type} ${s.year.toString().slice(-2)}` === label)
           if (season) {
             handleSeasonChange(season.id.toString())
           }

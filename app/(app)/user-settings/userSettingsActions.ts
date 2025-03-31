@@ -3,6 +3,7 @@
 import { getCurrentSession } from "@/auth/auth"
 import { sql } from "@/db/db"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 export async function updateUserCurrentSeason(seasonId: number) {
   const { session, user } = await getCurrentSession()
@@ -16,7 +17,8 @@ export async function updateUserCurrentSeason(seasonId: number) {
     WHERE id = ${user.id}
   `
 
-  revalidatePath("/")
+  revalidatePath("/", 'layout')
+  redirect('/dashboard')
 }
 
 export async function updateUsername(newUsername: string) {

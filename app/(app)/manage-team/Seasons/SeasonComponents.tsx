@@ -64,6 +64,8 @@ export function AddSeason() {
   const [isLoading, setIsLoading] = useState(true)
 
   const seasonTypes = ["Fall", "Spring"]
+  const [selectedSeasonType, setSelectedSeasonType] = useState("")
+  const [springGameDate, setSpringGameDate] = useState("")
 
   useEffect(() => {
     const loadPreviousPlayers = async () => {
@@ -87,8 +89,9 @@ export function AddSeason() {
 
     const yearValue = formData.get("year") as string
     const typeValue = formData.get("type") as string
+    const springGameDateValue = formData.get("springGameDate") as string
 
-    if (!yearValue || !typeValue) {
+    if (!yearValue || !typeValue || (typeValue === "Spring" && !springGameDateValue)) {
       setFormError(true)
       return
     }
@@ -126,6 +129,7 @@ export function AddSeason() {
           carryoverRBs,
           newQBs,
           newRBs,
+          springGameDate: typeValue === "Spring" ? springGameDateValue : undefined,
         })
         setFormKey((prev) => prev + 1)
         if (formRef.current) formRef.current.reset()
@@ -133,6 +137,8 @@ export function AddSeason() {
         setSelectedRBs(new Set())
         setNewQBs([])
         setNewRBs([])
+        setSelectedSeasonType("")
+        setSpringGameDate("")
         window.location.reload()
       } catch (error) {
         console.error("Failed to create season:", error)
@@ -226,7 +232,7 @@ export function AddSeason() {
   return (
     <div className="mb-2">
       <Accordian title="New Season" contentClassName="p-2">
-        <form key={formKey} ref={formRef} onSubmit={handleAddSeason} className="space-y-2">
+        <form key={formKey} ref={formRef} onSubmit={handleAddSeason} className="space-y-2 max-h-[500px] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
             <div className="md:col-span-6">
               <TextInput
@@ -241,8 +247,32 @@ export function AddSeason() {
               />
             </div>
             <div className="md:col-span-6">
-              <ComboBox label="Season Type" name="type" id="type" options={seasonTypes} required error={formError} />
+              <ComboBox
+                label="Season Type"
+                name="type"
+                id="type"
+                options={seasonTypes}
+                required
+                error={formError}
+                value={selectedSeasonType}
+                onChange={(value) => setSelectedSeasonType(value)}
+              />
             </div>
+            {selectedSeasonType === "Spring" && (
+              <div className="md:col-span-12 mt-2">
+                <TextInput
+                  label="Spring Game Date"
+                  name="springGameDate"
+                  id="springGameDate"
+                  type="date"
+                  defaultValue={springGameDate}
+                  onChange={(e) => setSpringGameDate(e.target.value)}
+                  placeholder="Select date"
+                  required={selectedSeasonType === "Spring"}
+                  error={formError}
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -255,38 +285,36 @@ export function AddSeason() {
               ) : (
                 <>
                   {previousPlayers.qbs.length > 0 && (
-                    <Accordian
-                      title={`Previous Season QBs`}
-                      titleClassName="text-sm font-medium"
-                      contentClassName="p-3"
-                    >
-                      <div className="space-y-2 mt-2">
-                        {previousPlayers.qbs.map((qb) => (
-                          <div
-                            key={qb.id}
-                            className="flex items-center justify-between p-3 border rounded-md hover:bg-neutral-50"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <CheckboxInput
-                                id={`qb-${qb.id}`}
-                                name={`qb-${qb.id}`}
-                                label=""
-                                defaultChecked={selectedQBs.has(qb.id)}
-                                onChange={() => toggleQB(qb.id)}
-                              />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {qb.name} <span className="text-gray-500">#{qb.number}</span>
-                                </p>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-500">{qb.year}</span>
-                                  <span className="text-xs text-gray-500">→</span>
-                                  <span className="text-xs font-semibold text-neutral-900">{getNextYear(qb.year)}</span>
+                    <Accordian title={`Previous Season QBs`} titleClassName="text-sm font-medium" contentClassName="p-3">
+                      <div className="max-h-[300px] overflow-y-auto pr-1">
+                        <div className="space-y-2 mt-2">
+                          {previousPlayers.qbs.map((qb) => (
+                            <div
+                              key={qb.id}
+                              className="flex items-center justify-between p-3 border rounded-md hover:bg-neutral-50"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <CheckboxInput
+                                  id={`qb-${qb.id}`}
+                                  name={`qb-${qb.id}`}
+                                  label=""
+                                  defaultChecked={selectedQBs.has(qb.id)}
+                                  onChange={() => toggleQB(qb.id)}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {qb.name} <span className="text-gray-500">#{qb.number}</span>
+                                  </p>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-xs text-gray-500">{qb.year}</span>
+                                    <span className="text-xs text-gray-500">→</span>
+                                    <span className="text-xs font-semibold text-neutral-900">{getNextYear(qb.year)}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </Accordian>
                   )}
@@ -381,38 +409,33 @@ export function AddSeason() {
               ) : (
                 <>
                   {previousPlayers.rbs.length > 0 && (
-                    <Accordian
-                      title={`Previous Season RBs`}
-                      titleClassName="text-sm font-medium"
-                      contentClassName="p-3"
-                    >
-                      <div className="space-y-2 mt-2">
-                        {previousPlayers.rbs.map((rb) => (
-                          <div
-                            key={rb.id}
-                            className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <CheckboxInput
-                                id={`rb-${rb.id}`}
-                                name={`rb-${rb.id}`}
-                                label=""
-                                defaultChecked={selectedRBs.has(rb.id)}
-                                onChange={() => toggleRB(rb.id)}
-                              />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {rb.name} <span className="text-gray-500">#{rb.number}</span>
-                                </p>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-500">{rb.year}</span>
-                                  <span className="text-xs text-gray-500">→</span>
-                                  <span className="text-xs text-neutral-900 font-semibold">{getNextYear(rb.year)}</span>
+                    <Accordian title={`Previous Season RBs`} titleClassName="text-sm font-medium" contentClassName="p-3">
+                      <div className="max-h-[300px] overflow-y-auto pr-1">
+                        <div className="space-y-2 mt-2">
+                          {previousPlayers.rbs.map((rb) => (
+                            <div key={rb.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+                              <div className="flex items-center space-x-3">
+                                <CheckboxInput
+                                  id={`rb-${rb.id}`}
+                                  name={`rb-${rb.id}`}
+                                  label=""
+                                  defaultChecked={selectedRBs.has(rb.id)}
+                                  onChange={() => toggleRB(rb.id)}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {rb.name} <span className="text-gray-500">#{rb.number}</span>
+                                  </p>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-xs text-gray-500">{rb.year}</span>
+                                    <span className="text-xs text-gray-500">→</span>
+                                    <span className="text-xs text-neutral-900 font-semibold">{getNextYear(rb.year)}</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </Accordian>
                   )}
@@ -513,9 +536,23 @@ export function AddSeason() {
 }
 
 export function SeasonsTable({ seasons }: { seasons: Season[] }) {
-  const [hoveredItem, setHoveredItem] = useState<number | null>(null)
-  const totalCount = seasons.length
-
+  const [hoveredItem, setHoveredItem] = useState<number | null>(null);
+  const totalCount = seasons.length;
+  
+  const sortedSeasons = [...seasons].sort((a, b) => {
+    if (a.year !== b.year) {
+      return b.year - a.year;
+    }
+    
+    if (a.type === "Spring" && b.type === "Fall") {
+      return -1;
+    } else if (a.type === "Fall" && b.type === "Spring") {
+      return 1;
+    }
+    
+    return 0;
+  });
+  
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-grow overflow-y-auto">
@@ -524,7 +561,8 @@ export function SeasonsTable({ seasons }: { seasons: Season[] }) {
             <div className="col-span-5">Type</div>
             <div className="col-span-3">Year</div>
           </div>
-          {seasons.map((season) => (
+          
+          {sortedSeasons.map((season) => (
             <div
               key={season.id}
               className="grid grid-cols-12 gap-2 items-center py-2 px-1 rounded-md hover:bg-neutral-50 transition-colors border-b border-neutral-100 last:border-b-0"
@@ -535,6 +573,7 @@ export function SeasonsTable({ seasons }: { seasons: Season[] }) {
               <div className="col-span-3 text-neutral-700">{season.year}</div>
             </div>
           ))}
+          
           {seasons.length === 0 && (
             <div className="py-4 text-sm text-neutral-500 text-center">
               No seasons found. Create a new one to get started.
@@ -542,14 +581,13 @@ export function SeasonsTable({ seasons }: { seasons: Season[] }) {
           )}
         </div>
       </div>
-
       <div className="flex-shrink-0 py-1.5 border-t border-neutral-100 bg-white flex justify-end px-2 sticky bottom-0">
         <div className="text-xs font-medium text-neutral-600 rounded-full bg-neutral-100 px-2 py-0.5">
           {totalCount} total
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function getNextYear(currentYear: string): string {
