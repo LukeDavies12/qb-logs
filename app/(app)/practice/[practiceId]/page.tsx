@@ -357,6 +357,9 @@ export default async function Page({
         })}
       </div>
       <div className="mt-6">
+        <AddPracticeBlock practiceId={practice.id} />
+      </div>
+      <div className="mt-2">
         <LogPracticePlay
           seasonQBs={seasonQBs}
           seasonRBs={seasonRBs}
@@ -365,9 +368,6 @@ export default async function Page({
           practiceBlocks={practiceBlocks}
           tags={tags}
         />
-      </div>
-      <div>
-        <AddPracticeBlock practiceId={practice.id} />
       </div>
       <div className="mt-3">
         <PracticePlaysTable

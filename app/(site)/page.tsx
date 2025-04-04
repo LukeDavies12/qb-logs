@@ -41,7 +41,7 @@ export default function Home() {
                       completion, 28-yard avg, just 1 turnover in 3 games.
                     </p>
                     <p>
-                      <span className="text-neutral-800 rounded-s-md p-1 bg-neutral-100">#RPO There Not Taken</span> Show yardage and conversion impact compared to other run plays.
+                      <span className="text-neutral-800 rounded-s-md p-1 bg-neutral-100">#RPO Missed</span> Show yardage and conversion impact compared to other run plays.
                     </p>
                   </div>
                 </div>
