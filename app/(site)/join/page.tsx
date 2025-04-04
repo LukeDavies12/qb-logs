@@ -19,7 +19,7 @@ export default function Page() {
 
       <form action={action} className="p-8 border border-gray-200 rounded-lg">
         <div className="lg:grid lg:grid-cols-4 lg:gap-2 space-y-2 lg:space-y-0">
-          <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@briarcliff.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />
+          <TextInput label="Email" name="email" type="email" placeholder="e.g. coachsmith@school.edu" required error={error?.includes('email')} defaultValue={state?.inputs?.email} />
           <TextInput label="Name" name="display_name" type="text" placeholder="e.g. Coach Smith" required defaultValue={state?.inputs?.display_name} />
           <TextInput label="Job Title" name="job_title" type="text" placeholder="e.g. QB Coach" required defaultValue={state?.inputs?.job_title} />
           <TextInput label="Password" name="password" type="password" placeholder="------------" required defaultValue={state?.inputs?.password} />
