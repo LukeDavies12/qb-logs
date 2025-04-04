@@ -1,10 +1,10 @@
 'use client'
 
-import { useActionState } from 'react'
+import Alert from "@/components/Alert"
 import DefaultButton from "@/components/DefaultButton"
 import H1 from "@/components/H1"
 import TextInput from "@/components/TextInput"
-import Alert from "@/components/Alert"
+import { useActionState } from 'react'
 import { joinAction } from './joinAction'
 
 export default function Page() {
@@ -28,9 +28,9 @@ export default function Page() {
         <div className="border-t border-neutral-200"></div>
         <br />
         <div className="lg:grid lg:grid-cols-3 lg:gap-2 space-y-2 lg:space-y-0">
-          <TextInput label="Team" name="team_name" type="text" placeholder="e.g. Briar Cliff Chargers" required error={error?.includes('team')} defaultValue={state?.inputs?.team_name} />
-          <TextInput label="City" name="team_city" type="text" placeholder="e.g. Sioux City" required defaultValue={state?.inputs?.team_city} />
-          <TextInput label="State" name="team_state" type="text" placeholder="e.g. IA" required error={error?.includes('State')} defaultValue={state?.inputs?.team_state} />
+          <TextInput label="Team" name="team_name" type="text" placeholder="e.g. New England Patriots" required error={error?.includes('team')} defaultValue={state?.inputs?.team_name} />
+          <TextInput label="City" name="team_city" type="text" placeholder="e.g. Foxborough" required defaultValue={state?.inputs?.team_city} />
+          <TextInput label="State" name="team_state" type="text" placeholder="e.g. MA" required error={error?.includes('State')} defaultValue={state?.inputs?.team_state} />
         </div>
         <DefaultButton text={isPending ? "Creating account..." : "Join"} type="submit" className="mt-4 w-full" disabled={isPending} />
       </form>
