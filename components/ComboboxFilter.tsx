@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
 import { X } from "lucide-react"
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 
 interface ComboBoxFilterProps<T extends string> {
   label: string

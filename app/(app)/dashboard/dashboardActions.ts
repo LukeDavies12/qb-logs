@@ -73,7 +73,6 @@ export async function addPracticeToSpringSeason(prevState: any, formData: FormDa
     }
 
     const date = formData.get("date") as string
-    const description = formData.get("description") as string
 
     if (!date) {
       return { error: "Date is required", success: false }
@@ -104,14 +103,8 @@ export async function addPracticeToSpringSeason(prevState: any, formData: FormDa
     // Insert the new practice with the game ID if available
     if (gameId) {
       await sql`
-        INSERT INTO practice (season_id, date, description, game_id)
-        VALUES (${current_season_id}, ${date}, ${description}, ${gameId})
-      `
-    } else {
-      // Insert without game_id if no game exists yet
-      await sql`
-        INSERT INTO practice (season_id, date, description)
-        VALUES (${current_season_id}, ${date}, ${description})
+        INSERT INTO practice (date, game_id)
+        VALUES (${date}, ${gameId})
       `
     }
 

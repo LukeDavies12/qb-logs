@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 
 interface ComboBoxProps<T extends string> {
   label: string

@@ -59,7 +59,7 @@ export default function TeamTabs({ data, qbsHasStarter, rbsHasStarter }: TeamTab
       </div>
       <div className="max-w-4xl mx-auto">
         {activeTab === "playGroupings" && (
-          <div className="h-[652px] rounded-lg border pt-2 px-3 flex flex-col">
+          <div className="h-[610px] rounded-lg border pt-2 px-3 flex flex-col">
             <H2 text="Play Groupings" />
             <div className="mb-2">
               <AddPlayGrouping />
@@ -68,7 +68,7 @@ export default function TeamTabs({ data, qbsHasStarter, rbsHasStarter }: TeamTab
           </div>
         )}
         {activeTab === "users" && (
-          <div className="h-[652px] rounded-lg border pt-2 px-3 flex flex-col">
+          <div className="h-[610px] rounded-lg border pt-2 px-3 flex flex-col">
             <H2 text="Users and Invites" />
             <div className="mb-2">
               <AddTeamInvite />
@@ -81,7 +81,7 @@ export default function TeamTabs({ data, qbsHasStarter, rbsHasStarter }: TeamTab
           </div>
         )}
         {activeTab === "qbs" && (
-          <div className="h-[652px] rounded-lg border px-3 pt-2 flex flex-col">
+          <div className="h-[610px] rounded-lg border px-3 pt-2 flex flex-col">
             <H2 text="Current Season QBs" />
             <div className="mb-2">
               <AddSeasonQB hasStarter={qbsHasStarter} />
@@ -90,7 +90,7 @@ export default function TeamTabs({ data, qbsHasStarter, rbsHasStarter }: TeamTab
           </div>
         )}
         {activeTab === "rbs" && (
-          <div className="h-[652px] rounded-lg border px-3 pt-2 flex flex-col">
+          <div className="h-[610px] rounded-lg border px-3 pt-2 flex flex-col">
             <H2 text="Current Season RBs" />
             <div className="mb-2">
               <AddSeasonRB hasStarter={rbsHasStarter} />
@@ -99,7 +99,7 @@ export default function TeamTabs({ data, qbsHasStarter, rbsHasStarter }: TeamTab
           </div>
         )}
         {activeTab === "seasons" && (
-          <div className="h-[652px] rounded-lg border px-3 pt-2 flex flex-col">
+          <div className="h-[610px] rounded-lg border px-3 pt-2 flex flex-col">
             <H2 text="Seasons" />
             <div className="mb-2">
               <AddSeason />

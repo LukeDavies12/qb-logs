@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 
 export interface ComboboxWKeysOption {
   label: string
@@ -53,7 +53,10 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   const dropdownRef = useRef<HTMLDivElement>(null)
   const optionsRef = useRef<HTMLLIElement[]>([])
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Add a flag to prevent value reversion during selection process
+  const selectionInProgressRef = useRef(false)
 
+  // Update inputValue when selectedValue changes (including initial load)
   useEffect(() => {
     if (selectedValue) {
       const selectedOption = formattedOptions.find((opt) => opt.value === selectedValue)
@@ -63,8 +66,9 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
     }
   }, [selectedValue, formattedOptions])
 
+  // Initialize from default value but only on mount or when defaultSelected actually changes
   useEffect(() => {
-    if (defaultSelected) {
+    if (defaultSelected && !selectionInProgressRef.current) {
       setSelectedValue(defaultSelected)
       const selectedOption = formattedOptions.find((opt) => opt.value === defaultSelected)
       if (selectedOption) {
@@ -76,24 +80,19 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   useImperativeHandle(ref, () => ({
     reset: (defaultValue?: string) => {
       if (defaultValue) {
-        setTimeout(() => {
-          setSelectedValue(defaultValue)
-          const selectedOption = formattedOptions.find((opt) => opt.value === defaultValue)
-          if (selectedOption) {
-            setInputValue(selectedOption.label)
-          }
-          onChange?.(defaultValue)
-        }, 0)
+        setSelectedValue(defaultValue)
+        const selectedOption = formattedOptions.find((opt) => opt.value === defaultValue)
+        if (selectedOption) {
+          setInputValue(selectedOption.label)
+        }
+        onChange?.(defaultValue)
       } else {
-        setTimeout(() => {
-          setSelectedValue("")
-          setInputValue("")
-          onChange?.("")
-        }, 0)
+        setSelectedValue("")
+        setInputValue("")
+        onChange?.("")
       }
     },
   }), [formattedOptions, onChange])
-
 
   const inputClassName = `mt-1 p-2 block w-full sm:text-sm rounded-md ${error
     ? "bg-red-50 text-red-900 placeholder:text-red-300 focus:ring-red-500"
@@ -118,11 +117,22 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   )
 
   const handleSelect = (option: ComboboxWKeysOption) => {
+    // Set the flag before making changes to prevent conflicts with defaultSelected effect
+    selectionInProgressRef.current = true
+    
+    // Update both values immediately
     setSelectedValue(option.value)
     setInputValue(option.label)
     setIsOpen(false)
     setHighlightedIndex(-1)
+    
+    // Trigger the onChange callback
     onChange?.(option.value)
+    
+    // Reset the flag after a short delay to allow for state updates to propagate
+    setTimeout(() => {
+      selectionInProgressRef.current = false
+    }, 50)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -160,11 +170,15 @@ const ComboboxWKeys = forwardRef(function ComboboxWKeys(
   }
 
   const handleBlur = () => {
+    // Don't reset value during an active selection
+    if (selectionInProgressRef.current) return;
+    
     blurTimeoutRef.current = setTimeout(() => {
       setIsOpen(false)
       setHighlightedIndex(-1)
 
-      if (selectedValue) {
+      // Only revert to the previous value if no selection is in progress
+      if (selectedValue && !selectionInProgressRef.current) {
         const selectedOption = formattedOptions.find((opt) => opt.value === selectedValue)
         if (selectedOption) {
           setInputValue(selectedOption.label)

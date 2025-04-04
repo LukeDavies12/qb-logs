@@ -3,7 +3,7 @@
 import type React from "react"
 
 import Combobox, { type ComboBoxRef } from "@/components/Combobox"
-import ComboboxWKeys, { type ComboBoxWKeysRef } from "@/components/ComboboxWKeys"
+import ComboboxWKeys from "@/components/ComboboxWKeys"
 import DefaultButton from "@/components/DefaultButton"
 import MultilineInput from "@/components/MultilineInput"
 import MultiTagSelect, { type MultiTagSelectRef, type TagOption } from "@/components/MultiTagSelect"
@@ -13,15 +13,15 @@ import { getVisibleFields } from "@/types/fieldVisibilityConfig"
 import {
   playExeuctionLevelsConst,
   playResultsConst,
-  type GamePlay,
-  type PlayGrouping,
+  type PlayExecutionLevel,
   type PlayGroupingType,
   type PlayResult,
 } from "@/types/gameTypes"
+import type { PracticePlay } from "@/types/practiceTypes"
 import type { SeasonQB, SeasonRB } from "@/types/seasonType"
 import { useActionState, useEffect, useRef, useState, useTransition } from "react"
 import { useFormStatus } from "react-dom"
-import { updatePlayOnGame } from "../gameActions"
+import { updatePlayPractice } from "./practiceActions"
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus()
@@ -36,26 +36,25 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
   )
 }
 
-export default function UpdatePlayForm({
+export default function UpdatePlayFormPractice({
   play,
   seasonQBs,
   seasonRBs,
   playGroupings,
-  gameId,
+  practiceId,
   tags,
-  driveNum,
+  blockId,
   setIsModalOpen,
 }: {
-  play: GamePlay
+  play: PracticePlay
   seasonQBs?: SeasonQB[]
   seasonRBs?: SeasonRB[]
-  playGroupings: PlayGrouping[]
-  gameId: number
+  playGroupings: { id: number; name: string; type: string }[]
+  practiceId: number
   tags: TagOption[]
-  driveNum: number
+  blockId: number
   setIsModalOpen: (isOpen: boolean) => void
 }) {
-  console.log("UpdatePlayForm", play)
   const initialPlayType = play.play_grouping_type?.type.toString() || ""
   const initialPlayResult = play.result || ""
 
@@ -105,9 +104,71 @@ export default function UpdatePlayForm({
 
   const initialState = { error: "", success: false }
 
-  const [state, formAction] = useActionState(updatePlayOnGame, initialState)
+  const [state, formAction] = useActionState(async (state: { error: string; success: boolean }, formData: FormData) => {
+    const playId = formData.get("updatePlayId")
+    const practiceIdValue = formData.get("updatePracticeId")
 
-  const qbComboboxRef = useRef<ComboBoxWKeysRef>(null)
+    if (!playId || !practiceIdValue) {
+      return { success: false, error: "Missing required play or practice ID" }
+    }
+
+    const play: Partial<PracticePlay> = {
+      id: Number(playId),
+      qb_in_id: Number(formData.get("updateQb")),
+      rb_carry_id: formData.get("updateRb") ? Number(formData.get("updateRb")) : null,
+      film_number: Number(formData.get("updateFilmNumber")),
+      play_call: formData.get("updatePlayCall") as string,
+      play_call_tags: formData.get("updatePlayCallTags") as string,
+      play_grouping_id: Number(formData.get("updatePlayGrouping")),
+      result: formData.get("updateResult") as PlayResult,
+      yards_gained: Number(formData.get("updateYardsGained")),
+      pocket_presence: (formData.get("updatePocketPresence") as PlayExecutionLevel) || null,
+      pass_read: (formData.get("updatePassRead") as PlayExecutionLevel) || null,
+      pass_ball_placement: (formData.get("updatePassBallPlacement") as PlayExecutionLevel) || null,
+      scramble_execution: (formData.get("updateScrambleExecution") as PlayExecutionLevel) || null,
+      qb_run_execution: (formData.get("updateQbRunExecution") as PlayExecutionLevel) || null,
+      rb_vision: (formData.get("updateRbVision") as PlayExecutionLevel) || null,
+      rb_run_execution: (formData.get("updateRbRunExecution") as PlayExecutionLevel) || null,
+      rpo_read_keys:
+        formData.get("updateRpoReadKeys") === "true"
+          ? true
+          : formData.get("updateRpoReadKeys") === "false"
+            ? false
+            : null,
+      read_option_read_keys:
+        formData.get("updateReadOptionReadKeys") === "true"
+          ? true
+          : formData.get("updateReadOptionReadKeys") === "false"
+            ? false
+            : null,
+      sack_on_qb:
+        formData.get("updateSackOnQb") === "true" ? true : formData.get("updateSackOnQb") === "false" ? false : null,
+      audible_opportunity_missed:
+        formData.get("updateAudibleOpportunityMissed") === "true"
+          ? true
+          : formData.get("updateAudibleOpportunityMissed") === "false"
+            ? false
+            : null,
+      audible_called:
+        formData.get("updateAudibleCalled") === "true"
+          ? true
+          : formData.get("updateAudibleCalled") === "false"
+            ? false
+            : null,
+      audible_success:
+        formData.get("updateAudibleSuccess") === "true"
+          ? true
+          : formData.get("updateAudibleSuccess") === "false"
+            ? false
+            : null,
+      notes: (formData.get("updateNotes") as string) || null,
+      tags: JSON.parse((formData.get("updateTags") as string) || "[]").map((tagId: number) => ({ tag_id: tagId })),
+    }
+
+    return updatePlayPractice(play, Number(practiceIdValue))
+  }, initialState)
+
+  const qbComboboxRef = useRef<ComboBoxRef>(null)
   const rbComboboxRef = useRef<ComboBoxRef>(null)
   const playGroupingComboboxRef = useRef<ComboBoxRef>(null)
   const resultComboboxRef = useRef<ComboBoxRef>(null)
@@ -131,11 +192,8 @@ export default function UpdatePlayForm({
 
   const initialFormState = {
     qb_in_id: play.qb_in_id.toString(),
-    drive_num: driveNum.toString(),
+    practice_block_id: blockId.toString(),
     film_number: play.film_number.toString(),
-    yard_line: play.yard_line.toString(),
-    down: play.down.toString(),
-    distance: play.distance.toString(),
     play_call: play.play_call,
     play_call_tags: play.play_call_tags || "",
     play_grouping_id: play.play_grouping_id.toString(),
@@ -196,7 +254,6 @@ export default function UpdatePlayForm({
 
     // Check combobox values
     if (qbValue !== play.qb_in_id.toString()) {
-      console.log("QB changed from", play.qb_in_id.toString(), "to", qbValue)
       return true
     }
 
@@ -257,33 +314,15 @@ export default function UpdatePlayForm({
 
     const formData = new FormData(formRef.current)
 
-    const driveNumValue = formData.get("updateDriveNum")
-    if (driveNumValue && driveNumValue.toString() !== driveNum.toString()) {
-      console.log("Drive Number changed")
+    const blockIdValue = formData.get("updateBlockId")
+    if (blockIdValue && blockIdValue.toString() !== blockId.toString()) {
+      console.log("Block ID changed")
       return true
     }
 
     const filmNumberValue = formData.get("updateFilmNumber")
     if (filmNumberValue && filmNumberValue.toString() !== play.film_number.toString()) {
       console.log("Film Number changed")
-      return true
-    }
-
-    const atValue = formData.get("updateAt")
-    if (atValue && atValue.toString() !== play.yard_line.toString()) {
-      console.log("Yard Line changed")
-      return true
-    }
-
-    const downValue = formData.get("updateDown")
-    if (downValue && downValue.toString() !== play.down.toString()) {
-      console.log("Down changed")
-      return true
-    }
-
-    const distanceValue = formData.get("updateDistance")
-    if (distanceValue && distanceValue.toString() !== play.distance.toString()) {
-      console.log("Distance changed")
       return true
     }
 
@@ -378,9 +417,9 @@ export default function UpdatePlayForm({
 
   return (
     <form className="p-2 bg-white text-sm" action={formAction} ref={formRef} onSubmit={handleSubmit}>
-      <input type="hidden" name="updateGameId" value={gameId} />
+      <input type="hidden" name="updatePracticeId" value={practiceId} />
       <input type="hidden" name="updatePlayId" value={play.id} />
-      <input type="hidden" name="updateDriveId" value={play.drive_id} />
+      <input type="hidden" name="updateBlockId" value={play.practice_block_id} />
 
       <div className="md:grid md:grid-cols-3 md:gap-1 lg:grid lg:grid-cols-12 lg:gap-1 space-y-2 lg:space-y-0">
         <div className="lg:col-span-2 lg:flex lg:items-center">
@@ -392,63 +431,20 @@ export default function UpdatePlayForm({
               options={seasonQBs?.map((qb) => ({ label: qb.name, value: qb.id.toString() })) || []}
               defaultSelected={play.qb_in_id.toString()}
               onChange={(value) => {
-                console.log("QB changed from", qbValue, "to", value)
                 setQbValue(value)
-                // Force form modified state to true immediately
-                setFormModified(true)
+                setFormModified(checkFormModified())
               }}
               required
-              ref={qbComboboxRef}
             />
           </div>
         </div>
         <div className="lg:col-span-3 lg:flex lg:items-center lg:gap-0.5">
           <div>
             <TextInput
-              id="updateDriveNum"
-              name="updateDriveNum"
-              label="Drive #"
-              defaultValue={driveNum.toString()}
-              type="number"
-              required
-            />
-          </div>
-          <div>
-            <TextInput
               id="updateFilmNumber"
               name="updateFilmNumber"
               label="Hudl #"
               defaultValue={play.film_number.toString()}
-              type="number"
-              required
-            />
-          </div>
-          <div>
-            <TextInput
-              id="updateAt"
-              name="updateAt"
-              label="At"
-              defaultValue={play.yard_line.toString()}
-              type="number"
-              required
-            />
-          </div>
-          <div>
-            <TextInput
-              id="updateDown"
-              name="updateDown"
-              label="Down"
-              defaultValue={play.down.toString()}
-              type="number"
-              required
-            />
-          </div>
-          <div>
-            <TextInput
-              id="updateDistance"
-              name="updateDistance"
-              label="Dist"
-              defaultValue={play.distance.toString()}
               type="number"
               required
             />
@@ -487,7 +483,6 @@ export default function UpdatePlayForm({
                 const newPlayType = selectedPlayGrouping ? selectedPlayGrouping.type.toString() : ""
 
                 if (newPlayType !== playType) {
-                  // Reset state values
                   setSackOnQB(false)
                   setRpoReadMade(false)
                   setReadOptionReadKeys(false)
@@ -495,7 +490,6 @@ export default function UpdatePlayForm({
                   setAudibleCalled(false)
                   setAudibleSuccess(false)
 
-                  // Reset state tracking values
                   setPocketPresenceValue("")
                   setPassReadValue("")
                   setPassBallPlacementValue("")
@@ -504,7 +498,6 @@ export default function UpdatePlayForm({
                   setRbVisionValue("")
                   setRbRunExecutionValue("")
 
-                  // Properly reset combobox components with empty string
                   if (pocketPresenceRef.current) pocketPresenceRef.current.reset()
                   if (passReadExecutionRef.current) passReadExecutionRef.current.reset()
                   if (passBallPlacementRef.current) passBallPlacementRef.current.reset()
@@ -512,18 +505,13 @@ export default function UpdatePlayForm({
                   if (qbRunExecutionRef.current) qbRunExecutionRef.current.reset()
                   if (rbVisionExecutionRef.current) rbVisionExecutionRef.current.reset()
                   if (rbRunExecutionRef.current) rbRunExecutionRef.current.reset()
-
-                  // Force a re-render of the form to ensure all fields are updated
-                  setTimeout(() => {
-                    setPlayType(newPlayType)
-                    setPlayGroupingValue(value)
-                    setFormModified(true)
-                  }, 0)
-                } else {
-                  setPlayType(newPlayType)
-                  setPlayGroupingValue(value)
-                  setFormModified(true)
                 }
+
+                setPlayType(newPlayType)
+                setPlayGroupingValue(value)
+
+                // Don't call checkFormModified directly, let the useEffect handle it
+                // The state update will trigger the useEffect
               }}
               options={
                 playGroupings?.map((pg) => ({
@@ -564,6 +552,7 @@ export default function UpdatePlayForm({
               defaultValue={play.yards_gained.toString()}
               type="number"
               required
+              onChange={(e) => setFormModified(checkFormModified())}
             />
           </div>
         </div>
@@ -794,6 +783,7 @@ export default function UpdatePlayForm({
       </div>
       <SubmitButton disabled={!formModified || isSubmitting} />
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state?.success && <p className="text-sm text-green-600 mt-2">Play updated successfully!</p>}
       {isSubmitting && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-md shadow-lg">
