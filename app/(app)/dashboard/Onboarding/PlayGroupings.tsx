@@ -1,15 +1,14 @@
 "use client"
 
-import type React from "react"
-import { useActionState } from "react"
-import { useState } from "react"
-import DefaultButton from "@/components/DefaultButton"
-import { XIcon } from "lucide-react"
-import { createPlayGroupings } from "./onboardActions"
 import ComboBox from "@/components/Combobox"
-import TextInput from "@/components/TextInput"
+import DefaultButton from "@/components/DefaultButton"
 import SecondaryButton from "@/components/SecondaryButton"
+import TextInput from "@/components/TextInput"
 import { PlayGroupingType } from "@/types/gameTypes"
+import { XIcon } from "lucide-react"
+import type React from "react"
+import { useActionState, useState } from "react"
+import { createPlayGroupings } from "./onboardActions"
 
 export default function PlayGroupingsOnboardingForm() {
   const [formError, setFormError] = useState(false)
@@ -46,7 +45,7 @@ export default function PlayGroupingsOnboardingForm() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 mb-8">
       <div>
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-neutral-900">Step 1: Create Play Groupings</h2>
@@ -62,7 +61,7 @@ export default function PlayGroupingsOnboardingForm() {
         {playGroupings.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-neutral-900">Added Groupings</h3>
-            <div className="space-y-2 h-[310px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
+            <div className="space-y-2 h-[280px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent hover:scrollbar-thumb-neutral-300">
               {playGroupings.map((group, index) => (
                 <div key={index} className="flex items-center justify-between px-3 py-1 bg-neutral-50 rounded-md border border-neutral-200" >
                   <div>
