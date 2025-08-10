@@ -32,20 +32,20 @@ export async function acceptInviteAction(
   formData: FormData
 ): Promise<ActionState> {
   const inputValues = getFormValues(formData);
-  
+
   try {
     // Validate form inputs
     const result = AcceptInviteSchema.safeParse(inputValues);
-    
+
     if (!result.success) {
       return {
         error: result.error.errors.map((e) => e.message).join(", "),
         inputs: inputValues,
       };
     }
-    
+
     const data = result.data;
-    
+
     // Find the invitation
     const invite = await sql`
       SELECT * FROM invite 
@@ -54,7 +54,7 @@ export async function acceptInviteAction(
     `;
 
     if (!invite || invite.length === 0) {
-      return { 
+      return {
         error: "Invalid or expired invitation",
         inputs: inputValues
       };
@@ -70,8 +70,8 @@ export async function acceptInviteAction(
         SET status = 'Expired'
         WHERE id = ${inviteData.id}
       `;
-      
-      return { 
+
+      return {
         error: "This invitation has expired",
         inputs: inputValues
       };
@@ -89,7 +89,7 @@ export async function acceptInviteAction(
         DELETE FROM invite
         WHERE id = ${inviteData.id}
       `;
-      
+
       return {
         error: "A user with this email already exists",
         inputs: inputValues
@@ -122,7 +122,7 @@ export async function acceptInviteAction(
     `;
 
     if (!newUser || newUser.length === 0) {
-      return { 
+      return {
         error: "Failed to create user account",
         inputs: inputValues
       };
@@ -152,7 +152,7 @@ export async function acceptInviteAction(
     const sessionToken = generateSessionToken();
     await createSession(sessionToken, userId);
     await setSessionTokenCookie(sessionToken);
-  
+
   } catch (error: any) {
     console.error("Error accepting invitation:", error);
     return {
@@ -160,7 +160,7 @@ export async function acceptInviteAction(
       inputs: inputValues
     };
   }
-  
+
   revalidatePath("/manage-team");
   revalidatePath("/");
   return redirect("/dashboard");
@@ -174,7 +174,7 @@ export async function cleanupExpiredInvites() {
       WHERE status = 'Pending' AND expires_at < NOW()
       RETURNING id
     `;
-    
+
     console.log(`Cleaned up ${result.length} expired invitations`);
     return { success: true, count: result.length };
   } catch (error) {
