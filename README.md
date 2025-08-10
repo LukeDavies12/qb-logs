@@ -18,4 +18,4 @@ Track progressions, ball placement, RPO reads, pocket presence, and audibles—a
 
 
 ## Data Schema
-![QB Logs ERD](/public/QB%20Logs%20ERD.svg "QB Logs ERD")
+![QB Logs ERD](/public/QB%20Logs%20ERD.png "QB Logs ERD")
